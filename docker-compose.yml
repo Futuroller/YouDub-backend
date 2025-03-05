@@ -1,0 +1,18 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:latest # Образ PostgreSQL
+    container_name: postgres_db # Имя контейнера
+    restart: always # Перезапуск при сбое
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data # Том для хранения данных
+    ports:
+      - "5432:5432" # Открываем порт для подключения к БД
+
+volumes:
+  pgdata: # Объявляем volume
