@@ -28,12 +28,12 @@ exports.userService = {
             }
         });
     },
-    findUser(userData) {
+    findUser(field, value) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 return yield prisma.users.findFirstOrThrow({
                     where: {
-                        id: userData.id
+                        [field]: value
                     }
                 });
             }
@@ -44,5 +44,19 @@ exports.userService = {
                 yield prisma.$disconnect();
             }
         });
-    }
+    },
+    updateUser(userId, updatedData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const updatedUser = yield prisma.users.update({
+                    where: { id: userId },
+                    data: updatedData,
+                });
+                return updatedUser;
+            }
+            catch (error) {
+                throw new Error(`Ошибка при обновлении пользователя: ${error}`);
+            }
+        });
+    },
 };

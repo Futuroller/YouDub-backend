@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, users } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -16,11 +16,11 @@ export const userService = {
         }
     },
 
-    async findUser(userData: any) {
+    async findUser(field: keyof users, value: any) {
         try {
             return await prisma.users.findFirstOrThrow({
                 where: {
-                    id: userData.id
+                    [field]: value
                 }
             });
         } catch (error) {
@@ -28,5 +28,18 @@ export const userService = {
         } finally {
             await prisma.$disconnect();
         }
-    }
-}
+    },
+
+    async updateUser(userId: number, updatedData: object) {
+        try {
+            const updatedUser = await prisma.users.update({
+                where: { id: userId },
+                data: updatedData,
+            });
+            return updatedUser;
+        } catch (error) {
+            throw new Error(`Ошибка при обновлении пользователя: ${error}`);
+        }
+    },
+
+};
