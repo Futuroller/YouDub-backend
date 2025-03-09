@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { userService } from "../services/auth.service";
+import { jwtService } from "../services/jwt.service";
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { sendActivationEmail } from "../utils/mailService";
@@ -63,14 +63,9 @@ export const AuthController = {//business
                 return;
             }
 
-            const token = jwt.sign(
-                { id: user.id, email: user.email, role: user.id_role },
-                process.env.JWT_SECRET || "SECRET_KEY",
-                { expiresIn: "7d" }
-            );
+            const token = await jwtService.createJwt(user);
 
             const { password_hash, is_banned, activation_link, ...publicUserData } = user;//исключаем данные, которые не стоит передавать на сервер
-
             res.status(200).json({
                 message: "Успешный вход",
                 token,
