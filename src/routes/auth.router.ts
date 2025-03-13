@@ -1,7 +1,5 @@
 import { Request, Response, Router } from "express";
-import { coursesRepository, CourseType } from "../controllers/courses-repository";
 import { body } from "express-validator";
-import { inputValidation } from "../middlewares/input-validation-middleware";
 import { AuthController } from "../controllers/auth.controller";
 export const authRoute = Router();
 

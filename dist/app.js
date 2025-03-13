@@ -6,11 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.app = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-const courses_router_1 = require("./routes/courses-router");
 const auth_router_1 = require("./routes/auth.router");
 const main_router_1 = require("./routes/main.router");
 exports.app = (0, express_1.default)();
 const port = 3000;
+BigInt.prototype.toJSON = function () {
+    return Number(this);
+};
 const jsonBodyMiddleware = express_1.default.json();
 exports.app.use((0, cors_1.default)({
     origin: 'http://localhost:5173',
@@ -21,7 +23,6 @@ exports.app.use((0, cors_1.default)({
 exports.app.use(jsonBodyMiddleware);
 exports.app.use('/api/auth', auth_router_1.authRoute);
 exports.app.use('/api/main', main_router_1.mainRoute);
-exports.app.use('/api/courses', courses_router_1.coursesRoute);
 exports.app.listen(port, () => {
     console.log(`App listening on port ${port}`);
 });

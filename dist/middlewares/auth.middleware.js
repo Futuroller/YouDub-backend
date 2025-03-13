@@ -33,7 +33,7 @@ const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         const userId = yield jwt_service_1.jwtService.getUserIdByToken(token);
         if (userId) {
             const user = yield auth_service_1.userService.findUser('id', userId);
-            console.log(userId);
+            // console.log(userId);
             const { password_hash, is_banned, activation_link } = user, publicUserData = __rest(user, ["password_hash", "is_banned", "activation_link"]);
             req.user = publicUserData;
             next();

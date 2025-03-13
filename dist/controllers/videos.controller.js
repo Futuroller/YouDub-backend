@@ -9,22 +9,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
-function createRole() {
-    return __awaiter(this, void 0, void 0, function* () {
+exports.VideosController = void 0;
+const videos_service_1 = require("../services/videos.service");
+exports.VideosController = {
+    getAllVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const role = yield prisma.roles.create({
-                data: {
-                    name: "Пользователь"
-                }
-            });
+            const { page = 1, limit = 10 } = req.body;
+            const data = yield videos_service_1.videosService.getAllVideos(Number(page), Number(limit));
+            res.status(200).json(data);
         }
         catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении видео' + error });
         }
-        finally {
-            yield prisma.$disconnect();
-        }
-    });
-}
-createRole();
+    })
+};

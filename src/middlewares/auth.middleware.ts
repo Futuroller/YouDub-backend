@@ -14,7 +14,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
 
         if (userId) {
             const user: any = await userService.findUser('id', userId);
-            console.log(userId);
+            // console.log(userId);
             const { password_hash, is_banned, activation_link, ...publicUserData } = user;
             req.user = publicUserData;
             next();

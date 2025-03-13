@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { userService } from "../services/auth.service";
 import { jwtService } from "../services/jwt.service";
 import bcrypt from 'bcrypt';
-import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { sendActivationEmail } from "../utils/mailService";
 
@@ -78,7 +77,6 @@ export const AuthController = {//business
 
     activateUser: async (req: Request, res: Response) => {
         const activationLink = req.params.token;
-        console.log("Запрос на активацию с token:", activationLink);
 
         try {
             const user = await userService.findUser('activation_link', activationLink);

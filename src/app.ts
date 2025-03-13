@@ -1,10 +1,13 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { coursesRoute } from './routes/courses-router';
 import { authRoute } from './routes/auth.router';
 import { mainRoute } from './routes/main.router';
 export const app = express();
 const port = 3000;
+
+(BigInt.prototype as any).toJSON = function () {
+    return Number(this);
+};
 
 const jsonBodyMiddleware = express.json();
 
@@ -19,7 +22,6 @@ app.use(jsonBodyMiddleware);
 
 app.use('/api/auth', authRoute);
 app.use('/api/main', mainRoute);
-app.use('/api/courses', coursesRoute);
 
 app.listen(port, () => {
     console.log(`App listening on port ${port}`);

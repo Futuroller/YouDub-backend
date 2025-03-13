@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@prisma/client": "^6.4.1",
+    "@prisma/client": "^6.5.0",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.13.10",
@@ -40,6 +40,6 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/nodemailer": "^6.4.17",
     "nodemon": "^3.1.9",
-    "prisma": "^6.4.1"
+    "prisma": "^6.5.0"
   }
 }

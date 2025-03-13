@@ -18,8 +18,8 @@ model comments {
   id           Int      @id(map: "comments_pk") @default(autoincrement())
   comment_text String   @db.VarChar
   comment_date DateTime @db.Timestamp(6)
-  likes        BigInt?
-  dislikes     BigInt?
+  likes        Int?
+  dislikes     Int?
   id_user      Int
   id_video     Int
   users        users    @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_users_fk")
@@ -91,7 +91,7 @@ model users {
   activation_link                                       String?         @db.VarChar
   id_role                                               Int
   description                                           String?         @db.VarChar
-  subscribers_count                                     BigInt?
+  subscribers_count                                     Int?
   is_banned                                             Boolean         @default(false)
   ban_reason                                            String?         @db.VarChar
   channel_header_url                                    String?         @db.VarChar
@@ -120,9 +120,9 @@ model videos {
   description     String?           @db.VarChar
   url             String            @unique(map: "videos_unique") @db.VarChar
   load_date       DateTime          @db.Timestamp(6)
-  views           BigInt?
-  likes           BigInt?
-  dislikes        BigInt?
+  views           Int?
+  likes           Int?
+  dislikes        Int?
   id_owner        Int
   id_access       Int
   comments        comments[]

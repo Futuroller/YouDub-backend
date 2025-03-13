@@ -87,7 +87,6 @@ exports.AuthController = {
     }),
     activateUser: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const activationLink = req.params.token;
-        console.log("Запрос на активацию с token:", activationLink);
         try {
             const user = yield auth_service_1.userService.findUser('activation_link', activationLink);
             if (!user || !('id' in user)) {
