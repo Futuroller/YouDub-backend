@@ -24,32 +24,5 @@ exports.videosService = {
             const totalCount = yield prisma.videos.count();
             return { videos, totalCount };
         });
-    },
-    getHistoryVideos(page, limit, userId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const skip = (page - 1) * limit;
-            const history = yield prisma.history.findMany({
-                where: { id_user: userId },
-                include: {
-                    videos: true,
-                    users: {
-                        select: {
-                            username: true,
-                            avatar_url: true
-                        }
-                    }
-                },
-                skip: skip,
-                take: Number(limit),
-                orderBy: { watched_at: 'desc' }
-            });
-            const videos = history.map(item => (Object.assign(Object.assign({}, item.videos), { owner_username: item.users.username })));
-            const totalCount = yield prisma.history.count({
-                where: {
-                    id_user: userId
-                }
-            });
-            return { videos, totalCount };
-        });
     }
 };

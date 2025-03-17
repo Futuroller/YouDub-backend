@@ -65,6 +65,7 @@ export const AuthController = {//business
             const token = await jwtService.createJwt(user);
 
             const { password_hash, is_banned, activation_link, ...publicUserData } = user;//исключаем данные, которые не стоит передавать на сервер
+
             res.status(200).json({
                 message: "Успешный вход",
                 token,

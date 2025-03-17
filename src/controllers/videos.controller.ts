@@ -13,5 +13,16 @@ export const VideosController = {//business
             console.log(error);
             res.status(500).json({ message: 'Ошибка при получении видео' + error });
         }
-    }
+    },
+    getHistoryVideos: async (req: Request, res: Response) => {
+        try {
+            const { page = 1, limit = 10, userId } = req.body;
+
+            const data = await videosService.getHistoryVideos(Number(page), Number(limit), userId);
+            res.status(200).json(data);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
+        }
+    },
 };

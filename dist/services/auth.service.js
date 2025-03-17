@@ -31,11 +31,23 @@ exports.userService = {
     findUser(field, value) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return yield prisma.users.findFirstOrThrow({
+                const user = yield prisma.users.findFirstOrThrow({
                     where: {
                         [field]: value
+                    },
+                });
+                const subscribersCount = yield prisma.subscriptions.count({
+                    where: {
+                        id_channel: user.id
                     }
                 });
+                const subscriptionsCount = yield prisma.subscriptions.count({
+                    where: {
+                        id_subscriber: user.id
+                    }
+                });
+                return Object.assign(Object.assign({}, user), { subscribersCount,
+                    subscriptionsCount });
             }
             catch (error) {
                 return { message: "Пользователь не найден" };

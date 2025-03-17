@@ -22,16 +22,5 @@ exports.VideosController = {
             console.log(error);
             res.status(500).json({ message: 'Ошибка при получении видео' + error });
         }
-    }),
-    getHistoryVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const { page = 1, limit = 10, userId } = req.body;
-            const data = yield videos_service_1.videosService.getHistoryVideos(Number(page), Number(limit), userId);
-            res.status(200).json(data);
-        }
-        catch (error) {
-            console.log(error);
-            res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
-        }
-    }),
+    })
 };

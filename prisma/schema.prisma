@@ -40,6 +40,7 @@ model playlist_videos {
   id          Int       @id(map: "playlist_videos_pk") @default(autoincrement())
   id_playlist Int
   id_video    Int
+  date_added  DateTime  @db.Timestamp(6)
   playlists   playlists @relation(fields: [id_playlist], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "playlist_videos_playlists_fk")
   videos      videos    @relation(fields: [id_video], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "playlist_videos_videos_fk")
 }
@@ -49,11 +50,9 @@ model playlists {
   name            String            @db.VarChar(150)
   description     String?           @db.VarChar
   url             String            @unique(map: "playlists_unique") @db.VarChar
-  views           BigInt?
-  likes           BigInt?
-  dislikes        BigInt?
   id_user         Int
   id_access       Int
+  creation_date   DateTime          @db.Timestamp(6)
   playlist_videos playlist_videos[]
   access_statuses access_statuses   @relation(fields: [id_access], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "playlists_access_statuses_fk")
   users           users             @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "playlists_users_fk")
@@ -66,12 +65,12 @@ model roles {
 }
 
 model subscriptions {
-  id                                            Int      @id(map: "subscriptions_pk") @default(autoincrement())
-  id_subscriber                                 Int
-  id_subscribed_user                            Int
-  subscribed_at                                 DateTime @db.Timestamp(6)
-  users_subscriptions_id_subscriberTousers      users    @relation("subscriptions_id_subscriberTousers", fields: [id_subscriber], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscriptions_users_fk")
-  users_subscriptions_id_subscribed_userTousers users    @relation("subscriptions_id_subscribed_userTousers", fields: [id_subscribed_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscriptions_users_fk_1")
+  id                                       Int      @id(map: "subscriptions_pk") @default(autoincrement())
+  id_subscriber                            Int
+  id_channel                               Int
+  subscribed_at                            DateTime @db.Timestamp(6)
+  users_subscriptions_id_subscriberTousers users    @relation("subscriptions_id_subscriberTousers", fields: [id_subscriber], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscriptions_users_fk")
+  users_subscriptions_id_channelTousers    users    @relation("subscriptions_id_channelTousers", fields: [id_channel], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscriptions_users_fk_1")
 }
 
 model tags {
@@ -81,27 +80,27 @@ model tags {
 }
 
 model users {
-  id                                                    Int             @id(map: "users_pk") @default(autoincrement())
-  username                                              String          @db.VarChar(50)
-  registration_date                                     DateTime        @db.Timestamp(6)
-  email                                                 String          @unique(map: "users_unique") @db.VarChar(50)
-  password_hash                                         String          @db.VarChar(255)
-  avatar_url                                            String?         @db.VarChar
-  is__activated                                         Boolean         @default(false) @map("is\u001f_activated")
-  activation_link                                       String?         @db.VarChar
-  id_role                                               Int
-  description                                           String?         @db.VarChar
-  subscribers_count                                     Int?
-  is_banned                                             Boolean         @default(false)
-  ban_reason                                            String?         @db.VarChar
-  channel_header_url                                    String?         @db.VarChar
-  comments                                              comments[]
-  history                                               history[]
-  playlists                                             playlists[]
-  subscriptions_subscriptions_id_subscriberTousers      subscriptions[] @relation("subscriptions_id_subscriberTousers")
-  subscriptions_subscriptions_id_subscribed_userTousers subscriptions[] @relation("subscriptions_id_subscribed_userTousers")
-  roles                                                 roles           @relation(fields: [id_role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_roles_fk")
-  videos                                                videos[]
+  id                                               Int             @id(map: "users_pk") @default(autoincrement())
+  username                                         String          @db.VarChar(50)
+  registration_date                                DateTime        @db.Timestamp(6)
+  email                                            String          @unique(map: "users_unique") @db.VarChar(50)
+  password_hash                                    String          @db.VarChar(255)
+  avatar_url                                       String?         @db.VarChar
+  is__activated                                    Boolean         @default(false) @map("is\u001f_activated")
+  activation_link                                  String?         @db.VarChar
+  id_role                                          Int
+  description                                      String?         @db.VarChar
+  subscribers_count                                Int?
+  is_banned                                        Boolean         @default(false)
+  ban_reason                                       String?         @db.VarChar
+  channel_header_url                               String?         @db.VarChar
+  comments                                         comments[]
+  history                                          history[]
+  playlists                                        playlists[]
+  subscriptions_subscriptions_id_subscriberTousers subscriptions[] @relation("subscriptions_id_subscriberTousers")
+  subscriptions_subscriptions_id_channelTousers    subscriptions[] @relation("subscriptions_id_channelTousers")
+  roles                                            roles           @relation(fields: [id_role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_roles_fk")
+  videos                                           videos[]
 
   @@index([id, username, email, password_hash, registration_date, avatar_url, channel_header_url, description, subscribers_count, is__activated, activation_link, is_banned, ban_reason, id_role], map: "users_id_idx")
 }
@@ -125,6 +124,7 @@ model videos {
   dislikes        Int?
   id_owner        Int
   id_access       Int
+  preview_url     String?           @db.VarChar
   comments        comments[]
   history         history[]
   playlist_videos playlist_videos[]

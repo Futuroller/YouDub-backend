@@ -17,11 +17,29 @@ export const userService = {
 
     async findUser(field: keyof users, value: any) {
         try {
-            return await prisma.users.findFirstOrThrow({
+            const user = await prisma.users.findFirstOrThrow({
                 where: {
                     [field]: value
+                },
+            });
+
+            const subscribersCount = await prisma.subscriptions.count({//Подписчики
+                where: {
+                    id_channel: user.id
                 }
             });
+
+            const subscriptionsCount = await prisma.subscriptions.count({//Подписки
+                where: {
+                    id_subscriber: user.id
+                }
+            });
+
+            return {
+                ...user,
+                subscribersCount,
+                subscriptionsCount
+            };
         } catch (error) {
             return { message: "Пользователь не найден" };
         } finally {
