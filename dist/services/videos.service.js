@@ -25,6 +25,19 @@ exports.videosService = {
             return { videos, totalCount };
         });
     },
+    getMyVideos(page, limit, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const skip = (page - 1) * limit;
+            let myVideos = yield prisma.videos.findMany({
+                where: { id_owner: userId },
+                skip: skip,
+                take: Number(limit),
+                orderBy: { load_date: 'desc' }
+            });
+            const totalCount = myVideos.length;
+            return { myVideos, totalCount };
+        });
+    },
     getHistoryVideos(page, limit, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
@@ -50,6 +63,22 @@ exports.videosService = {
                 }
             });
             return { videos, totalCount };
+        });
+    },
+    deleteHistoryVideo(videoId, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const currentVideo = yield prisma.history.findFirstOrThrow({
+                where: {
+                    id_video: videoId,
+                    id_user: userId
+                }
+            });
+            const deleteVideo = yield prisma.history.delete({
+                where: {
+                    id: currentVideo.id
+                },
+            });
+            return deleteVideo;
         });
     }
 };

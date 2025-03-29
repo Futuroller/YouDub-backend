@@ -21,7 +21,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = void 0;
-const auth_service_1 = require("../services/auth.service");
+const user_service_1 = require("../services/user.service");
 const jwt_service_1 = require("../services/jwt.service");
 const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.headers.authorization) {
@@ -32,7 +32,7 @@ const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     try {
         const userId = yield jwt_service_1.jwtService.getUserIdByToken(token);
         if (userId) {
-            const user = yield auth_service_1.userService.findUser('id', userId);
+            const user = yield user_service_1.userService.findUser('id', userId);
             // console.log(userId);
             const { password_hash, is_banned, activation_link } = user, publicUserData = __rest(user, ["password_hash", "is_banned", "activation_link"]);
             req.user = publicUserData;

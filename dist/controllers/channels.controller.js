@@ -9,24 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlaylistsController = void 0;
-const playlists_service_1 = require("../services/playlists.service");
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
-exports.PlaylistsController = {
-    getAllPlaylists: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.ChannelsController = void 0;
+const channels_service_1 = require("../services/channels.service");
+exports.ChannelsController = {
+    getChannels: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            if (req.user) {
-                const playlists = yield playlists_service_1.playlistsService.getAllPlaylists(req.user);
-                res.status(200).json({ playlists });
-            }
-            else {
-                res.status(500).json({ message: 'Ошибка получения пользовательских данных' });
-            }
+            const channels = yield channels_service_1.channelsService.getChannels(req.user.id);
+            res.status(200).json({ channels });
         }
         catch (error) {
             console.log(error);
-            res.status(500).json({ message: 'Ошибка при получении плейлистов: ' + error });
+            res.status(500).json({ message: 'Ошибка при получении каналов: ' + error });
         }
-    }),
+    })
 };

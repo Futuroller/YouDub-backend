@@ -23,15 +23,36 @@ exports.VideosController = {
             res.status(500).json({ message: 'Ошибка при получении видео' + error });
         }
     }),
-    getHistoryVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    getMyVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { page = 1, limit = 10, userId } = req.body;
-            const data = yield videos_service_1.videosService.getHistoryVideos(Number(page), Number(limit), userId);
+            const { page = 1, limit = 10 } = req.body;
+            const data = yield videos_service_1.videosService.getMyVideos(Number(page), Number(limit), req.user.id);
             res.status(200).json(data);
         }
         catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
+        }
+    }),
+    getHistoryVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const { page = 1, limit = 10 } = req.body;
+            const data = yield videos_service_1.videosService.getHistoryVideos(Number(page), Number(limit), req.user.id);
+            res.status(200).json(data);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
+        }
+    }),
+    deleteHistoryVideo: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const data = yield videos_service_1.videosService.deleteHistoryVideo(+req.params.id, req.user.id);
+            res.status(200).json(data);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при удалении видео из истории' + error });
         }
     }),
 };

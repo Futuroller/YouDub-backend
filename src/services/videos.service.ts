@@ -17,6 +17,20 @@ export const videosService = {
 
         return { videos, totalCount };
     },
+    async getMyVideos(page: number, limit: number, userId: number) {
+        const skip = (page - 1) * limit;
+
+        let myVideos = await prisma.videos.findMany({
+            where: { id_owner: userId },
+            skip: skip,
+            take: Number(limit),
+            orderBy: { load_date: 'desc' }
+        });
+
+        const totalCount = myVideos.length;
+
+        return { myVideos, totalCount };
+    },
     async getHistoryVideos(page: number, limit: number, userId: number) {
         const skip = (page - 1) * limit;
 
@@ -48,5 +62,21 @@ export const videosService = {
         });
 
         return { videos, totalCount };
+    },
+    async deleteHistoryVideo(videoId: number, userId: number) {
+        const currentVideo = await prisma.history.findFirstOrThrow({
+            where: {
+                id_video: videoId,
+                id_user: userId
+            }
+        });
+
+        const deleteVideo = await prisma.history.delete({
+            where: {
+                id: currentVideo.id
+            },
+        });
+
+        return deleteVideo;
     }
 };

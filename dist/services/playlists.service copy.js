@@ -9,24 +9,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlaylistsController = void 0;
-const playlists_service_1 = require("../services/playlists.service");
+exports.playlistsService = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
-exports.PlaylistsController = {
-    getAllPlaylists: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            if (req.user) {
-                const playlists = yield playlists_service_1.playlistsService.getAllPlaylists(req.user);
-                res.status(200).json({ playlists });
-            }
-            else {
-                res.status(500).json({ message: 'Ошибка получения пользовательских данных' });
-            }
-        }
-        catch (error) {
-            console.log(error);
-            res.status(500).json({ message: 'Ошибка при получении плейлистов: ' + error });
-        }
-    }),
+exports.playlistsService = {
+    getAllPlaylists() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let playlists = yield prisma.playlists.findMany({
+                orderBy: { name: 'desc' }
+            });
+            return playlists;
+        });
+    }
 };

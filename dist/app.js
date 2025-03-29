@@ -16,13 +16,14 @@ BigInt.prototype.toJSON = function () {
 const jsonBodyMiddleware = express_1.default.json();
 exports.app.use((0, cors_1.default)({
     origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 exports.app.use(jsonBodyMiddleware);
 exports.app.use('/api/auth', auth_router_1.authRoute);
 exports.app.use('/api/main', main_router_1.mainRoute);
+exports.app.use('/uploads', express_1.default.static('uploads')); // Раздача статики
 exports.app.listen(port, () => {
     console.log(`App listening on port ${port}`);
 });

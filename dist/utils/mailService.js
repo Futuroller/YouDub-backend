@@ -24,13 +24,17 @@ const transporter = nodemailer_1.default.createTransport({
 });
 const sendActivationEmail = (email, activationLink) => __awaiter(void 0, void 0, void 0, function* () {
     const url = `${config_1.API_URL}/auth/activate/${activationLink}`;
-    yield transporter.sendMail({
-        from: '"YouDub" <no-reply.youdub@mail.ru>',
-        to: email,
-        subject: 'Подтвердите ваш аккаунт',
-        html: `<h2>Добро пожаловать в YouDub!</h2>
-               <p>Для активации аккаунта перейдите по сылке:</p>
-               <a href="${url}">${url}</a>`
-    });
+    try {
+        yield transporter.sendMail({
+            from: '"YouDub" <no-reply.youdub@mail.ru>',
+            to: email,
+            subject: 'Подтвердите ваш аккаунт',
+            html: `<h2>Добро пожаловать в YouDub!</h2>
+                   <p>Для активации аккаунта перейдите по сылке:</p>
+                   <a href="${url}">${url}</a>`
+        });
+    }
+    catch (error) {
+    }
 });
 exports.sendActivationEmail = sendActivationEmail;

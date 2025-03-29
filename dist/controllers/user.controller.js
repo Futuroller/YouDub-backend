@@ -23,14 +23,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthController = void 0;
+exports.UserController = void 0;
 const user_service_1 = require("../services/user.service");
 const jwt_service_1 = require("../services/jwt.service");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const crypto_1 = __importDefault(require("crypto"));
 const mailService_1 = require("../utils/mailService");
 const playlists_service_1 = require("../services/playlists.service");
-exports.AuthController = {
+exports.UserController = {
     addUser: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const body = req.body;
         const hashedPassword = yield bcrypt_1.default.hash(body.password, 5);
@@ -106,6 +106,30 @@ exports.AuthController = {
         catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка активации аккаунта', error });
+        }
+    }),
+    updateUser: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a, _b;
+        try {
+            const userId = req.user.id;
+            const updatedFields = Object.assign({}, req.body);
+            if (req.files) {
+                const files = req.files;
+                if ((_a = files.avatar) === null || _a === void 0 ? void 0 : _a[0]) {
+                    updatedFields.avatar_url = files.avatar[0].filename;
+                    console.log('Загружен аватар:', files.avatar[0].filename);
+                }
+                if ((_b = files.header) === null || _b === void 0 ? void 0 : _b[0]) {
+                    updatedFields.channel_header_url = files.header[0].filename;
+                    console.log('Загружена шапка:', files.header[0].filename);
+                }
+            }
+            const user = yield user_service_1.userService.updateUser(userId, updatedFields);
+            res.status(200).json(user);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления пользователя', error });
         }
     }),
 };

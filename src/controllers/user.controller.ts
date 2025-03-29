@@ -1,12 +1,14 @@
-import { Request, Response } from "express";
-import { userService } from "../services/auth.service";
+import { Request, response, Response } from "express";
+import { userService } from "../services/user.service";
 import { jwtService } from "../services/jwt.service";
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { sendActivationEmail } from "../utils/mailService";
+import { playlistsService } from "../services/playlists.service";
+import { users } from "@prisma/client";
 
 
-export const AuthController = {//business
+export const UserController = {//business
     addUser: async (req: Request, res: Response) => {
         const body = req.body;
         const hashedPassword = await bcrypt.hash(body.password, 5);
@@ -30,11 +32,11 @@ export const AuthController = {//business
                 res.status(500).json({ message: "Ошибка сервера" });
                 return;
             }
-
             await sendActivationEmail(user.email, activationLink);
 
             res.status(201).json(user);
         } catch (error) {
+            console.log(error);
             res.status(500).json({ message: 'Ошибка регистрации пользователя', error });
         }
     },
@@ -92,12 +94,39 @@ export const AuthController = {//business
                 return;
             }
 
-            await userService.updateUser(user.id, { is__activated: true, activation_link: null });// 
+            await userService.updateUser(user.id, { is__activated: true, activation_link: null });
+            await playlistsService.createDefaultPlaylists(user.id);
 
             res.status(200).json({ message: "Аккаунт успешно активирован!" });
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка активации аккаунта', error });
+        }
+    },
+    updateUser: async (req: Request, res: Response) => {
+        try {
+            const userId = req.user.id;
+            const updatedFields = { ...req.body };
+
+            if (req.files) {
+                const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+                if (files.avatar?.[0]) {
+                    updatedFields.avatar_url = files.avatar[0].filename;
+                    console.log('Загружен аватар:', files.avatar[0].filename);
+                }
+
+                if (files.header?.[0]) {
+                    updatedFields.channel_header_url = files.header[0].filename;
+                    console.log('Загружена шапка:', files.header[0].filename);
+                }
+            }
+            const user = await userService.updateUser(userId, updatedFields);
+
+            res.status(200).json(user);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления пользователя', error });
         }
     },
 };

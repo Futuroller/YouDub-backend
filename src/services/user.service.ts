@@ -58,5 +58,4 @@ export const userService = {
             throw new Error(`Ошибка при обновлении пользователя: ${error}`);
         }
     },
-
 };

@@ -13,7 +13,7 @@ const jsonBodyMiddleware = express.json();
 
 app.use(cors({
     origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
@@ -22,6 +22,7 @@ app.use(jsonBodyMiddleware);
 
 app.use('/api/auth', authRoute);
 app.use('/api/main', mainRoute);
+app.use('/uploads', express.static('uploads')); // Раздача статики
 
 app.listen(port, () => {
     console.log(`App listening on port ${port}`);

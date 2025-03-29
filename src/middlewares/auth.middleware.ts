@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { userService } from '../services/auth.service'
+import { userService } from '../services/user.service'
 import { jwtService } from "../services/jwt.service";
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
@@ -24,5 +24,4 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     } catch (error) {
         res.status(400).json({ message: `Ошибка auth.middleware: ${error}` });
     }
-
 };
