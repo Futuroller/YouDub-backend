@@ -17,10 +17,19 @@ exports.videosService = {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
             let videos = yield prisma.videos.findMany({
+                include: {
+                    users: {
+                        select: {
+                            username: true,
+                            avatar_url: true
+                        }
+                    }
+                },
                 skip: skip,
                 take: Number(limit),
                 orderBy: { load_date: 'desc' }
-            });
+            })
+                .then(videos => videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: video.users.username, owner_channel_image: video.users.avatar_url }))));
             const totalCount = yield prisma.videos.count();
             return { videos, totalCount };
         });
@@ -30,12 +39,52 @@ exports.videosService = {
             const skip = (page - 1) * limit;
             let myVideos = yield prisma.videos.findMany({
                 where: { id_owner: userId },
+                include: {
+                    users: {
+                        select: {
+                            username: true,
+                            avatar_url: true
+                        }
+                    }
+                },
                 skip: skip,
                 take: Number(limit),
                 orderBy: { load_date: 'desc' }
-            });
+            })
+                .then(videos => videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: video.users.username, owner_channel_image: video.users.avatar_url }))));
             const totalCount = myVideos.length;
             return { myVideos, totalCount };
+        });
+    },
+    getVideosFromPlaylist(page, limit, playlist) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const skip = (page - 1) * limit;
+            try {
+                const playlistVideos = yield prisma.playlist_videos.findMany({
+                    where: { id_playlist: playlist.id },
+                    include: {
+                        videos: true,
+                        playlists: {
+                            include: {
+                                users: {
+                                    select: {
+                                        username: true,
+                                        avatar_url: true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    skip: skip,
+                    take: Number(limit),
+                    orderBy: { date_added: 'desc' }
+                });
+                const videos = playlistVideos.map(video => (Object.assign(Object.assign({}, video.videos), { owner_username: video.playlists.users.username, owner_channel_image: video.playlists.users.avatar_url })));
+                return videos;
+            }
+            catch (error) {
+                throw new Error('Ошибка получения видео из плейлиста');
+            }
         });
     },
     getHistoryVideos(page, limit, userId) {
@@ -56,7 +105,7 @@ exports.videosService = {
                 take: Number(limit),
                 orderBy: { watched_at: 'desc' }
             });
-            const videos = history.map(item => (Object.assign(Object.assign({}, item.videos), { owner_username: item.users.username })));
+            const videos = history.map(item => (Object.assign(Object.assign({}, item.videos), { owner_username: item.users.username, owner_avatar: item.users.avatar_url })));
             const totalCount = yield prisma.history.count({
                 where: {
                     id_user: userId

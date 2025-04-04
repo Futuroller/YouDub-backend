@@ -1,11 +1,11 @@
-import { Request, response, Response } from "express";
+import { Request, Response } from "express";
 import { userService } from "../services/user.service";
 import { jwtService } from "../services/jwt.service";
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { sendActivationEmail } from "../utils/mailService";
 import { playlistsService } from "../services/playlists.service";
-import { users } from "@prisma/client";
+import { deleteFile } from "../utils/deleteFile";
 
 
 export const UserController = {//business
@@ -103,25 +103,53 @@ export const UserController = {//business
             res.status(500).json({ message: 'Ошибка активации аккаунта', error });
         }
     },
+
     updateUser: async (req: Request, res: Response) => {
         try {
             const userId = req.user.id;
+            const user = await userService.findUser('id', userId);
             const updatedFields = { ...req.body };
 
             if (req.files) {
                 const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-                if (files.avatar?.[0]) {
+                if ('avatar_url' in user && files.avatar?.[0]) {
+                    deleteFile(`avatars/${user.avatar_url}`)
                     updatedFields.avatar_url = files.avatar[0].filename;
-                    console.log('Загружен аватар:', files.avatar[0].filename);
                 }
 
-                if (files.header?.[0]) {
+                if ('channel_header_url' in user && files.header?.[0]) {
+                    deleteFile(`headers/${user.channel_header_url}`);
                     updatedFields.channel_header_url = files.header[0].filename;
-                    console.log('Загружена шапка:', files.header[0].filename);
                 }
             }
-            const user = await userService.updateUser(userId, updatedFields);
+            const updatedUser = await userService.updateUser(userId, updatedFields);
+
+            res.status(200).json(updatedUser);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления пользователя', error });
+        }
+    },
+
+    unsetUserField: async (req: Request, res: Response) => {
+        try {
+            const userId = req.user.id;
+            const { avatar_url, channel_header_url } = req.body;
+            const unsetedFields: any = {};
+
+            if (avatar_url) {
+                deleteFile(`avatars/${avatar_url}`);
+                unsetedFields.avatar_url = null;
+                console.log('deleted: ' + avatar_url)
+            }
+
+            if (channel_header_url) {
+                deleteFile(`headers/${channel_header_url}`);
+                unsetedFields.channel_header_url = null;
+            }
+
+            const user = await userService.updateUser(userId, unsetedFields);
 
             res.status(200).json(user);
         } catch (error) {

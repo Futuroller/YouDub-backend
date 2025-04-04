@@ -16,6 +16,7 @@ mainRoute.post('/videos/my-channel', authMiddleware, VideosController.getMyVideo
 mainRoute.post('/history', authMiddleware, VideosController.getHistoryVideos);
 mainRoute.delete('/history/:id', authMiddleware, VideosController.deleteHistoryVideo);
 mainRoute.get('/playlists', authMiddleware, PlaylistsController.getAllPlaylists);
+mainRoute.post('/playlists/:url', authMiddleware, PlaylistsController.getPlaylistByUrl);
 mainRoute.get('/channels', authMiddleware, ChannelsController.getChannels);
 mainRoute.patch('/user/configure', authMiddleware, upload, UserController.updateUser);
-mainRoute.delete('/user/configure', authMiddleware, UserController.updateUser);
+mainRoute.delete('/user/configure', authMiddleware, UserController.unsetUserField);
