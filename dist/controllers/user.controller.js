@@ -30,6 +30,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const crypto_1 = __importDefault(require("crypto"));
 const mailService_1 = require("../utils/mailService");
 const playlists_service_1 = require("../services/playlists.service");
+const deleteFile_1 = require("../utils/deleteFile");
 exports.UserController = {
     addUser: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const body = req.body;
@@ -112,19 +113,42 @@ exports.UserController = {
         var _a, _b;
         try {
             const userId = req.user.id;
+            const user = yield user_service_1.userService.findUser('id', userId);
             const updatedFields = Object.assign({}, req.body);
             if (req.files) {
                 const files = req.files;
-                if ((_a = files.avatar) === null || _a === void 0 ? void 0 : _a[0]) {
+                if ('avatar_url' in user && ((_a = files.avatar) === null || _a === void 0 ? void 0 : _a[0])) {
+                    (0, deleteFile_1.deleteFile)(`avatars/${user.avatar_url}`);
                     updatedFields.avatar_url = files.avatar[0].filename;
-                    console.log('Загружен аватар:', files.avatar[0].filename);
                 }
-                if ((_b = files.header) === null || _b === void 0 ? void 0 : _b[0]) {
+                if ('channel_header_url' in user && ((_b = files.header) === null || _b === void 0 ? void 0 : _b[0])) {
+                    (0, deleteFile_1.deleteFile)(`headers/${user.channel_header_url}`);
                     updatedFields.channel_header_url = files.header[0].filename;
-                    console.log('Загружена шапка:', files.header[0].filename);
                 }
             }
-            const user = yield user_service_1.userService.updateUser(userId, updatedFields);
+            const updatedUser = yield user_service_1.userService.updateUser(userId, updatedFields);
+            res.status(200).json(updatedUser);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления пользователя', error });
+        }
+    }),
+    unsetUserField: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const userId = req.user.id;
+            const { avatar_url, channel_header_url } = req.body;
+            const unsetedFields = {};
+            if (avatar_url) {
+                (0, deleteFile_1.deleteFile)(`avatars/${avatar_url}`);
+                unsetedFields.avatar_url = null;
+                console.log('deleted: ' + avatar_url);
+            }
+            if (channel_header_url) {
+                (0, deleteFile_1.deleteFile)(`headers/${channel_header_url}`);
+                unsetedFields.channel_header_url = null;
+            }
+            const user = yield user_service_1.userService.updateUser(userId, unsetedFields);
             res.status(200).json(user);
         }
         catch (error) {

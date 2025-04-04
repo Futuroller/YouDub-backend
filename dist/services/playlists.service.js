@@ -8,18 +8,40 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.playlistsService = void 0;
 const client_1 = require("@prisma/client");
+const crypto_1 = __importDefault(require("crypto"));
 const prisma = new client_1.PrismaClient();
 exports.playlistsService = {
     getAllPlaylists(user) {
         return __awaiter(this, void 0, void 0, function* () {
             let playlists = yield prisma.playlists.findMany({
                 where: { id_user: user.id },
+                include: {
+                    access_statuses: true,
+                    playlist_videos: true
+                },
                 orderBy: { name: 'desc' }
-            });
+            })
+                .then(playlists => playlists.map(playlist => (Object.assign(Object.assign({}, playlist), { access_status: playlist.access_statuses.name, videosCount: playlist.playlist_videos.length }))));
             return playlists;
+        });
+    },
+    getPlaylistByUrl(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let playlist = yield prisma.playlists.findFirstOrThrow({
+                    where: { url: url },
+                });
+                return playlist;
+            }
+            catch (error) {
+                return null;
+            }
         });
     },
     createDefaultPlaylists(userId) {
@@ -28,8 +50,8 @@ exports.playlistsService = {
                 const watchLater = yield prisma.playlists.create({
                     data: {
                         name: 'Смотреть позже',
-                        description: 'Важные видео',
-                        url: '3e333123s312',
+                        description: '',
+                        url: crypto_1.default.randomUUID(),
                         id_user: userId,
                         id_access: 3,
                         creation_date: new Date()
@@ -39,7 +61,7 @@ exports.playlistsService = {
                     data: {
                         name: 'Понравившиеся',
                         description: '',
-                        url: '3e3333212s3312',
+                        url: crypto_1.default.randomUUID(),
                         id_user: userId,
                         id_access: 3,
                         creation_date: new Date()

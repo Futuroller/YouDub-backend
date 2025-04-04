@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlaylistsController = void 0;
 const playlists_service_1 = require("../services/playlists.service");
 const client_1 = require("@prisma/client");
+const videos_service_1 = require("../services/videos.service");
 const prisma = new client_1.PrismaClient();
 exports.PlaylistsController = {
     getAllPlaylists: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -22,6 +23,29 @@ exports.PlaylistsController = {
             }
             else {
                 res.status(500).json({ message: 'Ошибка получения пользовательских данных' });
+            }
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении плейлистов: ' + error });
+        }
+    }),
+    getPlaylistByUrl: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const url = req.params.url;
+            const { page = 1, limit = 10 } = req.body;
+            if (url) {
+                const playlist = yield playlists_service_1.playlistsService.getPlaylistByUrl(url);
+                if (playlist) {
+                    const videos = yield videos_service_1.videosService.getVideosFromPlaylist(Number(page), Number(limit), playlist);
+                    res.status(200).json({ videos, playlist });
+                }
+                else {
+                    res.status(200).json({});
+                }
+            }
+            else {
+                res.status(500).json({ message: 'Ошибка при получении плейлиста' });
             }
         }
         catch (error) {

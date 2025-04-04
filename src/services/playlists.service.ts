@@ -1,24 +1,44 @@
-import { Request } from "express";
 import { PrismaClient, users } from "@prisma/client";
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
 export const playlistsService = {
-
     async getAllPlaylists(user: users) {
         let playlists = await prisma.playlists.findMany({
             where: { id_user: user.id },
+            include: {
+                access_statuses: true,
+                playlist_videos: true
+            },
             orderBy: { name: 'desc' }
-        });
+        })
+            .then(playlists => playlists.map(playlist => ({
+                ...playlist,
+                access_status: playlist.access_statuses.name,
+                videosCount: playlist.playlist_videos.length
+            })));
+
         return playlists;
+    },
+    async getPlaylistByUrl(url: string) {
+        try {
+            let playlist = await prisma.playlists.findFirstOrThrow({
+                where: { url: url },
+            });
+
+            return playlist;
+        } catch (error) {
+            return null;
+        }
     },
     async createDefaultPlaylists(userId: number) {
         try {
             const watchLater = await prisma.playlists.create({
                 data: {
                     name: 'Смотреть позже',
-                    description: 'Важные видео',
-                    url: '3e333123s312',
+                    description: '',
+                    url: crypto.randomUUID(),
                     id_user: userId,
                     id_access: 3,
                     creation_date: new Date()
@@ -28,7 +48,7 @@ export const playlistsService = {
                 data: {
                     name: 'Понравившиеся',
                     description: '',
-                    url: '3e3333212s3312',
+                    url: crypto.randomUUID(),
                     id_user: userId,
                     id_access: 3,
                     creation_date: new Date()

@@ -20,6 +20,7 @@ exports.mainRoute.post('/videos/my-channel', auth_middleware_1.authMiddleware, v
 exports.mainRoute.post('/history', auth_middleware_1.authMiddleware, videos_controller_1.VideosController.getHistoryVideos);
 exports.mainRoute.delete('/history/:id', auth_middleware_1.authMiddleware, videos_controller_1.VideosController.deleteHistoryVideo);
 exports.mainRoute.get('/playlists', auth_middleware_1.authMiddleware, playlists_controller_1.PlaylistsController.getAllPlaylists);
+exports.mainRoute.post('/playlists/:url', auth_middleware_1.authMiddleware, playlists_controller_1.PlaylistsController.getPlaylistByUrl);
 exports.mainRoute.get('/channels', auth_middleware_1.authMiddleware, channels_controller_1.ChannelsController.getChannels);
 exports.mainRoute.patch('/user/configure', auth_middleware_1.authMiddleware, uploadFile_1.default, user_controller_1.UserController.updateUser);
-exports.mainRoute.delete('/user/configure', auth_middleware_1.authMiddleware, user_controller_1.UserController.updateUser);
+exports.mainRoute.delete('/user/configure', auth_middleware_1.authMiddleware, user_controller_1.UserController.unsetUserField);
