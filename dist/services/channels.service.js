@@ -26,7 +26,6 @@ exports.channelsService = {
                                 username: true,
                                 avatar_url: true,
                                 description: true,
-                                subscribers_count: true
                             }
                         }
                     },

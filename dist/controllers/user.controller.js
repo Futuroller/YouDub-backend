@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserController = void 0;
+exports.userController = void 0;
 const user_service_1 = require("../services/user.service");
 const jwt_service_1 = require("../services/jwt.service");
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -31,7 +31,7 @@ const crypto_1 = __importDefault(require("crypto"));
 const mailService_1 = require("../utils/mailService");
 const playlists_service_1 = require("../services/playlists.service");
 const deleteFile_1 = require("../utils/deleteFile");
-exports.UserController = {
+exports.userController = {
     addUser: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const body = req.body;
         const hashedPassword = yield bcrypt_1.default.hash(body.password, 5);

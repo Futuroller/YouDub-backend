@@ -74,4 +74,21 @@ exports.playlistsService = {
             }
         });
     },
+    addVideoToPlaylist(videoId, playlistId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const playlistVideo = yield prisma.playlist_videos.create({
+                    data: {
+                        id_video: videoId,
+                        id_playlist: playlistId,
+                        date_added: new Date()
+                    }
+                });
+                return playlistVideo;
+            }
+            catch (error) {
+                throw new Error(`Ошибка при добавлении видео в плейлист: ${error}`);
+            }
+        });
+    },
 };

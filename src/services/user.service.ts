@@ -46,7 +46,6 @@ export const userService = {
             await prisma.$disconnect();
         }
     },
-
     async updateUser(userId: number, updatedData: object) {
         try {
             const updatedUser = await prisma.users.update({

@@ -59,4 +59,18 @@ export const playlistsService = {
             throw new Error(`Ошибка при создании базовых плейлистов: ${error}`);
         }
     },
+    async addVideoToPlaylist(videoId: number, playlistId: number) {
+        try {
+            const playlistVideo = await prisma.playlist_videos.create({
+                data: {
+                    id_video: videoId,
+                    id_playlist: playlistId,
+                    date_added: new Date()
+                }
+            });
+            return playlistVideo;
+        } catch (error) {
+            throw new Error(`Ошибка при добавлении видео в плейлист: ${error}`);
+        }
+    },
 };

@@ -9,8 +9,16 @@ const path_1 = __importDefault(require("path"));
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
         let folder = 'uploads/avatars';
-        if (file.fieldname === 'header') {
-            folder = 'uploads/headers';
+        switch (file.fieldname) {
+            case 'header':
+                folder = 'uploads/headers';
+                break;
+            case 'video':
+                folder = 'uploads/videos';
+                break;
+            case 'preview':
+                folder = 'uploads/previews';
+                break;
         }
         cb(null, folder);
     },
@@ -21,16 +29,20 @@ const storage = multer_1.default.diskStorage({
     }
 });
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const videoTypes = ['video/mp4', 'video/webm'];
+    const allowedTypes = [...imageTypes, ...videoTypes];
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     }
     else {
-        cb(new Error('Допускаются только изображения (JPG, PNG)'), false);
+        cb(new Error('Допускаются только изображения (JPG, PNG) и видео (MP4, WebM)'), false);
     }
 };
 const upload = (0, multer_1.default)({ storage, fileFilter }).fields([
     { name: 'avatar', maxCount: 1 },
-    { name: 'header', maxCount: 1 }
+    { name: 'header', maxCount: 1 },
+    { name: 'video', maxCount: 1 },
+    { name: 'preview', maxCount: 1 }
 ]);
 exports.default = upload;

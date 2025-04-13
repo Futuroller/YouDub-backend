@@ -80,29 +80,27 @@ model tags {
 }
 
 model users {
-  id                                               Int             @id(map: "users_pk") @default(autoincrement())
-  username                                         String          @db.VarChar(50)
-  registration_date                                DateTime        @db.Timestamp(6)
-  email                                            String          @unique(map: "users_unique") @db.VarChar(50)
-  password_hash                                    String          @db.VarChar(255)
-  avatar_url                                       String?         @db.VarChar
-  is__activated                                    Boolean         @default(false) @map("is\u001f_activated")
-  activation_link                                  String?         @db.VarChar
+  id                                               Int                   @id(map: "users_pk") @default(autoincrement())
+  username                                         String                @db.VarChar(50)
+  registration_date                                DateTime              @db.Timestamp(6)
+  email                                            String                @unique(map: "users_unique") @db.VarChar(50)
+  password_hash                                    String                @db.VarChar(255)
+  avatar_url                                       String?               @db.VarChar
+  is__activated                                    Boolean               @default(false) @map("is\u001f_activated")
+  activation_link                                  String?               @db.VarChar
   id_role                                          Int
-  description                                      String?         @db.VarChar
-  subscribers_count                                Int?
-  is_banned                                        Boolean         @default(false)
-  ban_reason                                       String?         @db.VarChar
-  channel_header_url                               String?         @db.VarChar
+  description                                      String?               @db.VarChar
+  is_banned                                        Boolean               @default(false)
+  ban_reason                                       String?               @db.VarChar
+  channel_header_url                               String?               @db.VarChar
   comments                                         comments[]
+  favorite_categories                              favorite_categories[]
   history                                          history[]
   playlists                                        playlists[]
-  subscriptions_subscriptions_id_subscriberTousers subscriptions[] @relation("subscriptions_id_subscriberTousers")
-  subscriptions_subscriptions_id_channelTousers    subscriptions[] @relation("subscriptions_id_channelTousers")
-  roles                                            roles           @relation(fields: [id_role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_roles_fk")
+  subscriptions_subscriptions_id_subscriberTousers subscriptions[]       @relation("subscriptions_id_subscriberTousers")
+  subscriptions_subscriptions_id_channelTousers    subscriptions[]       @relation("subscriptions_id_channelTousers")
+  roles                                            roles                 @relation(fields: [id_role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_roles_fk")
   videos                                           videos[]
-
-  @@index([id, username, email, password_hash, registration_date, avatar_url, channel_header_url, description, subscribers_count, is__activated, activation_link, is_banned, ban_reason, id_role], map: "users_id_idx")
 }
 
 model video_tags {
@@ -111,6 +109,8 @@ model video_tags {
   id_tag   Int
   tags     tags   @relation(fields: [id_tag], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "video_tags_tags_fk")
   videos   videos @relation(fields: [id_video], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "video_tags_videos_fk")
+
+  @@unique([id_video, id_tag], name: "id_video_id_tag", map: "id_video_id_tag")
 }
 
 model videos {
@@ -125,10 +125,27 @@ model videos {
   id_owner        Int
   id_access       Int
   preview_url     String?           @db.VarChar
+  id_category     Int
   comments        comments[]
   history         history[]
   playlist_videos playlist_videos[]
   video_tags      video_tags[]
   access_statuses access_statuses   @relation(fields: [id_access], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "videos_access_statuses_fk")
+  categories      categories        @relation(fields: [id_category], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "videos_categories_fk")
   users           users             @relation(fields: [id_owner], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "videos_users_fk")
+}
+
+model categories {
+  id                  Int                   @id(map: "categories_pk") @default(autoincrement())
+  name                String                @unique(map: "categories_unique") @db.VarChar
+  favorite_categories favorite_categories[]
+  videos              videos[]
+}
+
+model favorite_categories {
+  id          Int        @id(map: "favorite_categories_pk") @default(autoincrement())
+  id_user     Int
+  id_category Int
+  categories  categories @relation(fields: [id_category], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "favorite_categories_categories_fk")
+  users       users      @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "favorite_categories_users_fk")
 }

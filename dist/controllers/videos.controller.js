@@ -9,9 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VideosController = void 0;
+exports.videosController = void 0;
 const videos_service_1 = require("../services/videos.service");
-exports.VideosController = {
+const tags_controller_1 = require("./tags.controller");
+const playlists_service_1 = require("../services/playlists.service");
+exports.videosController = {
     getAllVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { page = 1, limit = 10 } = req.body;
@@ -21,6 +23,70 @@ exports.VideosController = {
         catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка при получении видео' + error });
+        }
+    }),
+    getVideoByUrl: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const url = req.params.url;
+            if (url) {
+                const video = yield videos_service_1.videosService.getVideoByUrl(url);
+                if (video) {
+                    res.status(200).json({ video });
+                }
+                else {
+                    res.status(200).json({});
+                }
+            }
+            else {
+                res.status(500).json({ message: 'Ошибка при загрузке видео' });
+            }
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при загрузке видео: ' + error });
+        }
+    }),
+    uploadVideo: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a, _b;
+        try {
+            let videoData = {
+                name: req.body.name,
+                description: req.body.description ? req.body.description : null,
+                load_date: new Date(),
+                views: 0,
+                likes: 0,
+                dislikes: 0,
+                id_owner: +req.user.id,
+                id_access: +req.body.id_access,
+                id_category: +req.body.id_category,
+                url: '',
+                preview_url: ''
+            };
+            if (req.files) {
+                const files = req.files;
+                if ((_a = files.video) === null || _a === void 0 ? void 0 : _a[0]) {
+                    videoData.url = files.video[0].filename;
+                }
+                if ((_b = files.preview) === null || _b === void 0 ? void 0 : _b[0]) {
+                    videoData.preview_url = files.preview[0].filename;
+                }
+            }
+            const video = yield videos_service_1.videosService.createVideo(videoData);
+            let tagsIds;
+            let playlistVideo;
+            if (video) {
+                if (req.body.tags) {
+                    tagsIds = yield tags_controller_1.tagsController.addTagsToVideo(req.body.tags, video.id);
+                }
+                if (req.body.id_playlist) {
+                    playlistVideo = yield playlists_service_1.playlistsService.addVideoToPlaylist(video.id, +req.body.id_playlist);
+                }
+            }
+            res.status(200).json(video);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при загрузке видео' + error });
         }
     }),
     getMyVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {

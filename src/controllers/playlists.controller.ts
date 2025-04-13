@@ -1,11 +1,8 @@
 import { Request, Response } from "express";
 import { playlistsService } from "../services/playlists.service";
-import { PrismaClient } from "@prisma/client";
 import { videosService } from "../services/videos.service";
 
-const prisma = new PrismaClient();
-
-export const PlaylistsController = {//business
+export const playlistsController = {//business
     getAllPlaylists: async (req: Request, res: Response) => {
         try {
             if (req.user) {

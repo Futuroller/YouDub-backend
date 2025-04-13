@@ -1,22 +1,28 @@
 import { Request, Response, Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { VideosController } from "../controllers/videos.controller";
-import { PlaylistsController } from "../controllers/playlists.controller";
-import { ChannelsController } from "../controllers/channels.controller";
+import { videosController } from "../controllers/videos.controller";
+import { playlistsController } from "../controllers/playlists.controller";
+import { channelsController } from "../controllers/channels.controller";
 import upload from "../middlewares/uploadFile";
-import { UserController } from "../controllers/user.controller";
+import { userController } from "../controllers/user.controller";
+import { categoriesController } from "../controllers/categories.controller";
+import { commentsController } from "../controllers/comments.controller";
 export const mainRoute = Router();
 
 mainRoute.get('/', authMiddleware, (req: Request, res: Response) => {
     res.status(200).json(req.user);
 });
 
-mainRoute.post('/videos', VideosController.getAllVideos);
-mainRoute.post('/videos/my-channel', authMiddleware, VideosController.getMyVideos);
-mainRoute.post('/history', authMiddleware, VideosController.getHistoryVideos);
-mainRoute.delete('/history/:id', authMiddleware, VideosController.deleteHistoryVideo);
-mainRoute.get('/playlists', authMiddleware, PlaylistsController.getAllPlaylists);
-mainRoute.post('/playlists/:url', authMiddleware, PlaylistsController.getPlaylistByUrl);
-mainRoute.get('/channels', authMiddleware, ChannelsController.getChannels);
-mainRoute.patch('/user/configure', authMiddleware, upload, UserController.updateUser);
-mainRoute.delete('/user/configure', authMiddleware, UserController.unsetUserField);
+mainRoute.post('/videos', videosController.getAllVideos);
+mainRoute.post('/videos/my-channel', authMiddleware, videosController.getMyVideos);
+mainRoute.post('/videos/upload', authMiddleware, upload, videosController.uploadVideo);
+mainRoute.get('/videos/:url', authMiddleware, videosController.getVideoByUrl);
+mainRoute.get('/comments/:url', authMiddleware, commentsController.getCommentsByVideoUrl);
+mainRoute.post('/history', authMiddleware, videosController.getHistoryVideos);
+mainRoute.delete('/history/:id', authMiddleware, videosController.deleteHistoryVideo);
+mainRoute.get('/playlists', authMiddleware, playlistsController.getAllPlaylists);
+mainRoute.post('/playlists/:url', authMiddleware, playlistsController.getPlaylistByUrl);
+mainRoute.get('/channels', authMiddleware, channelsController.getChannels);
+mainRoute.patch('/user/configure', authMiddleware, upload, userController.updateUser);
+mainRoute.delete('/user/configure', authMiddleware, userController.unsetUserField);
+mainRoute.get('/categories', authMiddleware, categoriesController.getAllCategories);

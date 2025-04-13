@@ -9,12 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlaylistsController = void 0;
+exports.playlistsController = void 0;
 const playlists_service_1 = require("../services/playlists.service");
-const client_1 = require("@prisma/client");
 const videos_service_1 = require("../services/videos.service");
-const prisma = new client_1.PrismaClient();
-exports.PlaylistsController = {
+exports.playlistsController = {
     getAllPlaylists: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             if (req.user) {

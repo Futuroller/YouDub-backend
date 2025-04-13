@@ -13,6 +13,48 @@ exports.videosService = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 exports.videosService = {
+    createVideo(videoData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const video = yield prisma.videos.create({
+                    data: videoData
+                });
+                return video;
+            }
+            catch (error) {
+                console.log(error);
+            }
+            finally {
+                yield prisma.$disconnect();
+            }
+        });
+    },
+    getVideoByUrl(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let video = yield prisma.videos.findFirstOrThrow({
+                    where: { url: url },
+                    include: {
+                        users: {
+                            select: {
+                                username: true,
+                                avatar_url: true,
+                            },
+                        }
+                    }
+                });
+                const ownerSubscribersCount = yield prisma.subscriptions.count({
+                    where: {
+                        id_channel: video.id_owner
+                    }
+                });
+                return Object.assign(Object.assign({}, video), { ownerSubscribersCount });
+            }
+            catch (error) {
+                return null;
+            }
+        });
+    },
     getAllVideos(page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;

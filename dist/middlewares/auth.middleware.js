@@ -39,7 +39,7 @@ const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             next();
         }
         else {
-            res.send(401);
+            res.sendStatus(401);
         }
     }
     catch (error) {

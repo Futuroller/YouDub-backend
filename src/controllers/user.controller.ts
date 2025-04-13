@@ -8,7 +8,7 @@ import { playlistsService } from "../services/playlists.service";
 import { deleteFile } from "../utils/deleteFile";
 
 
-export const UserController = {//business
+export const userController = {//business
     addUser: async (req: Request, res: Response) => {
         const body = req.body;
         const hashedPassword = await bcrypt.hash(body.password, 5);

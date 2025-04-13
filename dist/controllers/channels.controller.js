@@ -9,9 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ChannelsController = void 0;
+exports.channelsController = void 0;
 const channels_service_1 = require("../services/channels.service");
-exports.ChannelsController = {
+exports.channelsController = {
     getChannels: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const channels = yield channels_service_1.channelsService.getChannels(req.user.id);

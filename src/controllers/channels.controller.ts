@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { channelsService } from "../services/channels.service";
 
-export const ChannelsController = {//business
+export const channelsController = {//business
     getChannels: async (req: Request, res: Response) => {
         try {
             const channels = await channelsService.getChannels(req.user.id);

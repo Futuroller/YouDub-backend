@@ -19,7 +19,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             req.user = publicUserData;
             next();
         } else {
-            res.send(401);
+            res.sendStatus(401);
         }
     } catch (error) {
         res.status(400).json({ message: `Ошибка auth.middleware: ${error}` });

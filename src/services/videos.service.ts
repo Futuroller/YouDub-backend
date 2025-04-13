@@ -1,9 +1,49 @@
-import { playlists, PrismaClient } from "@prisma/client";
+import { playlists, PrismaClient, videos } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export const videosService = {
+    async createVideo(videoData: any) {
+        try {
+            const video = await prisma.videos.create({
+                data: videoData
+            });
 
+            return video;
+        } catch (error) {
+            console.log(error);
+        } finally {
+            await prisma.$disconnect();
+        }
+    },
+    async getVideoByUrl(url: string) {
+        try {
+            let video = await prisma.videos.findFirstOrThrow({
+                where: { url: url },
+                include: {
+                    users: {
+                        select: {
+                            username: true,
+                            avatar_url: true,
+                        },
+                    }
+                }
+            });
+
+            const ownerSubscribersCount = await prisma.subscriptions.count({//Подписчики
+                where: {
+                    id_channel: video.id_owner
+                }
+            });
+
+            return {
+                ...video,
+                ownerSubscribersCount
+            };
+        } catch (error) {
+            return null;
+        }
+    },
     async getAllVideos(page: number, limit: number) {
         const skip = (page - 1) * limit;
 
