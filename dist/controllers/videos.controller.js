@@ -13,6 +13,7 @@ exports.videosController = void 0;
 const videos_service_1 = require("../services/videos.service");
 const tags_controller_1 = require("./tags.controller");
 const playlists_service_1 = require("../services/playlists.service");
+const reactions_service_1 = require("../services/reactions.service");
 exports.videosController = {
     getAllVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -31,7 +32,8 @@ exports.videosController = {
             if (url) {
                 const video = yield videos_service_1.videosService.getVideoByUrl(url);
                 if (video) {
-                    res.status(200).json({ video });
+                    const reaction = yield reactions_service_1.reactionService.isReacted(req.user.id, video.id);
+                    res.status(200).json({ video, reaction });
                 }
                 else {
                     res.status(200).json({});
@@ -54,8 +56,6 @@ exports.videosController = {
                 description: req.body.description ? req.body.description : null,
                 load_date: new Date(),
                 views: 0,
-                likes: 0,
-                dislikes: 0,
                 id_owner: +req.user.id,
                 id_access: +req.body.id_access,
                 id_category: +req.body.id_category,
@@ -119,6 +119,42 @@ exports.videosController = {
         catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка при удалении видео из истории' + error });
+        }
+    }),
+    addVideoToHistory: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const userId = req.user.id;
+            const url = req.params.url;
+            const video = yield videos_service_1.videosService.getVideoByUrl(url);
+            if (!video || !video.id)
+                return;
+            const data = yield videos_service_1.videosService.addVideoToHistory(userId, video.id);
+            res.status(200).json(data);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка добавления видео в историю просмотра: ' + error });
+        }
+    }),
+    setReactionToVideo: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const userId = req.user.id;
+            const url = req.params.url;
+            const video = yield videos_service_1.videosService.getVideoByUrl(url);
+            const { reaction } = req.body;
+            let reactionId = null;
+            if (reaction === 'like')
+                reactionId = 1;
+            if (reaction === 'dislike')
+                reactionId = 2;
+            if (!video || !video.id)
+                return;
+            const data = yield videos_service_1.videosService.setReactionToVideo(userId, video.id, reactionId);
+            res.status(200).json(data);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка оценки видео: ' + error });
         }
     }),
 };

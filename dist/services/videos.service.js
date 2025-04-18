@@ -40,15 +40,37 @@ exports.videosService = {
                                 username: true,
                                 avatar_url: true,
                             },
-                        }
+                        },
                     }
                 });
+                const [views, likes, dislikes] = yield Promise.all([
+                    prisma.history.count({
+                        where: {
+                            id_video: video.id,
+                        }
+                    }),
+                    prisma.history.count({
+                        where: {
+                            id_video: video.id,
+                            id_reaction: 1
+                        }
+                    }),
+                    prisma.history.count({
+                        where: {
+                            id_video: video.id,
+                            id_reaction: 2
+                        }
+                    })
+                ]);
                 const ownerSubscribersCount = yield prisma.subscriptions.count({
                     where: {
                         id_channel: video.id_owner
                     }
                 });
-                return Object.assign(Object.assign({}, video), { ownerSubscribersCount });
+                return Object.assign(Object.assign({}, video), { ownerSubscribersCount,
+                    views,
+                    likes,
+                    dislikes });
             }
             catch (error) {
                 return null;
@@ -65,13 +87,18 @@ exports.videosService = {
                             username: true,
                             avatar_url: true
                         }
+                    },
+                    _count: {
+                        select: {
+                            history: true
+                        }
                     }
                 },
                 skip: skip,
                 take: Number(limit),
                 orderBy: { load_date: 'desc' }
             })
-                .then(videos => videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: video.users.username, owner_channel_image: video.users.avatar_url }))));
+                .then(videos => videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: video.users.username, owner_channel_image: video.users.avatar_url, views: video._count.history }))));
             const totalCount = yield prisma.videos.count();
             return { videos, totalCount };
         });
@@ -87,13 +114,18 @@ exports.videosService = {
                             username: true,
                             avatar_url: true
                         }
+                    },
+                    _count: {
+                        select: {
+                            history: true
+                        }
                     }
                 },
                 skip: skip,
                 take: Number(limit),
                 orderBy: { load_date: 'desc' }
             })
-                .then(videos => videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: video.users.username, owner_channel_image: video.users.avatar_url }))));
+                .then(videos => videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: video.users.username, owner_channel_image: video.users.avatar_url, views: video._count.history }))));
             const totalCount = myVideos.length;
             return { myVideos, totalCount };
         });
@@ -105,7 +137,15 @@ exports.videosService = {
                 const playlistVideos = yield prisma.playlist_videos.findMany({
                     where: { id_playlist: playlist.id },
                     include: {
-                        videos: true,
+                        videos: {
+                            include: {
+                                _count: {
+                                    select: {
+                                        history: true
+                                    }
+                                },
+                            },
+                        },
                         playlists: {
                             include: {
                                 users: {
@@ -115,13 +155,13 @@ exports.videosService = {
                                     }
                                 }
                             }
-                        }
+                        },
                     },
                     skip: skip,
                     take: Number(limit),
                     orderBy: { date_added: 'desc' }
                 });
-                const videos = playlistVideos.map(video => (Object.assign(Object.assign({}, video.videos), { owner_username: video.playlists.users.username, owner_channel_image: video.playlists.users.avatar_url })));
+                const videos = playlistVideos.map(video => (Object.assign(Object.assign({}, video.videos), { owner_username: video.playlists.users.username, owner_channel_image: video.playlists.users.avatar_url, views: video.videos._count.history })));
                 return videos;
             }
             catch (error) {
@@ -135,11 +175,19 @@ exports.videosService = {
             const history = yield prisma.history.findMany({
                 where: { id_user: userId },
                 include: {
-                    videos: true,
-                    users: {
-                        select: {
-                            username: true,
-                            avatar_url: true
+                    videos: {
+                        include: {
+                            users: {
+                                select: {
+                                    username: true,
+                                    avatar_url: true
+                                }
+                            },
+                            _count: {
+                                select: {
+                                    history: true
+                                }
+                            }
                         }
                     }
                 },
@@ -147,7 +195,7 @@ exports.videosService = {
                 take: Number(limit),
                 orderBy: { watched_at: 'desc' }
             });
-            const videos = history.map(item => (Object.assign(Object.assign({}, item.videos), { owner_username: item.users.username, owner_avatar: item.users.avatar_url })));
+            const videos = history.map(item => (Object.assign(Object.assign({}, item.videos), { owner_username: item.videos.users.username, owner_avatar: item.videos.users.avatar_url, views: item.videos._count.history })));
             const totalCount = yield prisma.history.count({
                 where: {
                     id_user: userId
@@ -171,5 +219,43 @@ exports.videosService = {
             });
             return deleteVideo;
         });
-    }
+    },
+    addVideoToHistory(userId, videoId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const historyRecord = yield prisma.history.upsert({
+                where: {
+                    id_user_id_video: {
+                        id_user: userId,
+                        id_video: videoId,
+                    },
+                },
+                update: {
+                    watched_at: new Date(),
+                },
+                create: {
+                    id_user: userId,
+                    id_video: videoId,
+                    progress_percent: 0,
+                    watched_at: new Date(),
+                }
+            });
+            return historyRecord;
+        });
+    },
+    setReactionToVideo(userId, videoId, reactionId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const reaction = yield prisma.history.update({
+                where: {
+                    id_user_id_video: {
+                        id_user: userId,
+                        id_video: videoId
+                    }
+                },
+                data: {
+                    id_reaction: reactionId
+                }
+            });
+            return reaction;
+        });
+    },
 };

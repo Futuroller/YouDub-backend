@@ -15,25 +15,30 @@ model access_statuses {
 }
 
 model comments {
-  id           Int      @id(map: "comments_pk") @default(autoincrement())
-  comment_text String   @db.VarChar
-  comment_date DateTime @db.Timestamp(6)
-  likes        Int?
-  dislikes     Int?
-  id_user      Int
-  id_video     Int
-  users        users    @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_users_fk")
-  videos       videos   @relation(fields: [id_video], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_videos_fk")
+  id                    Int                     @id(map: "comments_pk") @default(autoincrement())
+  comment_text          String                  @db.VarChar
+  comment_date          DateTime                @db.Timestamp(6)
+  likes                 Int?
+  dislikes              Int?
+  id_user               Int
+  id_video              Int
+  users                 users                   @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_users_fk")
+  videos                videos                  @relation(fields: [id_video], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "comments_videos_fk")
+  user_comment_reaction user_comment_reaction[]
 }
 
 model history {
-  id               Int      @id(map: "history_pk") @default(autoincrement())
+  id               Int        @id(map: "history_pk") @default(autoincrement())
   id_user          Int
   id_video         Int
   progress_percent Int?
-  watched_at       DateTime @db.Timestamp(6)
-  users            users    @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "history_users_fk")
-  videos           videos   @relation(fields: [id_video], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "history_videos_fk")
+  watched_at       DateTime   @db.Timestamp(6)
+  id_reaction      Int?
+  reactions        reactions? @relation(fields: [id_reaction], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "history_reactions_fk")
+  users            users      @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "history_users_fk")
+  videos           videos     @relation(fields: [id_video], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "history_videos_fk")
+
+  @@unique([id_user, id_video], map: "id_user_id_video")
 }
 
 model playlist_videos {
@@ -80,26 +85,27 @@ model tags {
 }
 
 model users {
-  id                                               Int                   @id(map: "users_pk") @default(autoincrement())
-  username                                         String                @db.VarChar(50)
-  registration_date                                DateTime              @db.Timestamp(6)
-  email                                            String                @unique(map: "users_unique") @db.VarChar(50)
-  password_hash                                    String                @db.VarChar(255)
-  avatar_url                                       String?               @db.VarChar
-  is__activated                                    Boolean               @default(false) @map("is\u001f_activated")
-  activation_link                                  String?               @db.VarChar
+  id                                               Int                     @id(map: "users_pk") @default(autoincrement())
+  username                                         String                  @db.VarChar(50)
+  registration_date                                DateTime                @db.Timestamp(6)
+  email                                            String                  @unique(map: "users_unique") @db.VarChar(50)
+  password_hash                                    String                  @db.VarChar(255)
+  avatar_url                                       String?                 @db.VarChar
+  is__activated                                    Boolean                 @default(false) @map("is\u001f_activated")
+  activation_link                                  String?                 @db.VarChar
   id_role                                          Int
-  description                                      String?               @db.VarChar
-  is_banned                                        Boolean               @default(false)
-  ban_reason                                       String?               @db.VarChar
-  channel_header_url                               String?               @db.VarChar
+  description                                      String?                 @db.VarChar
+  is_banned                                        Boolean                 @default(false)
+  ban_reason                                       String?                 @db.VarChar
+  channel_header_url                               String?                 @db.VarChar
   comments                                         comments[]
   favorite_categories                              favorite_categories[]
   history                                          history[]
   playlists                                        playlists[]
-  subscriptions_subscriptions_id_subscriberTousers subscriptions[]       @relation("subscriptions_id_subscriberTousers")
-  subscriptions_subscriptions_id_channelTousers    subscriptions[]       @relation("subscriptions_id_channelTousers")
-  roles                                            roles                 @relation(fields: [id_role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_roles_fk")
+  subscriptions_subscriptions_id_subscriberTousers subscriptions[]         @relation("subscriptions_id_subscriberTousers")
+  subscriptions_subscriptions_id_channelTousers    subscriptions[]         @relation("subscriptions_id_channelTousers")
+  user_comment_reaction                            user_comment_reaction[]
+  roles                                            roles                   @relation(fields: [id_role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_roles_fk")
   videos                                           videos[]
 }
 
@@ -119,9 +125,6 @@ model videos {
   description     String?           @db.VarChar
   url             String            @unique(map: "videos_unique") @db.VarChar
   load_date       DateTime          @db.Timestamp(6)
-  views           Int?
-  likes           Int?
-  dislikes        Int?
   id_owner        Int
   id_access       Int
   preview_url     String?           @db.VarChar
@@ -148,4 +151,21 @@ model favorite_categories {
   id_category Int
   categories  categories @relation(fields: [id_category], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "favorite_categories_categories_fk")
   users       users      @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "favorite_categories_users_fk")
+}
+
+model reactions {
+  id                    Int                     @id(map: "reactions_pk") @default(autoincrement())
+  type                  String                  @db.VarChar
+  history               history[]
+  user_comment_reaction user_comment_reaction[]
+}
+
+model user_comment_reaction {
+  id          Int       @id(map: "user_comment_reaction_pk") @default(autoincrement())
+  id_user     Int
+  id_comment  Int
+  id_reaction Int
+  comments    comments  @relation(fields: [id_comment], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_comment_reaction_comments_fk")
+  reactions   reactions @relation(fields: [id_reaction], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_comment_reaction_reactions_fk")
+  users       users     @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_comment_reaction_users_fk")
 }

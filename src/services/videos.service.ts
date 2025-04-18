@@ -26,9 +26,29 @@ export const videosService = {
                             username: true,
                             avatar_url: true,
                         },
-                    }
+                    },
                 }
             });
+
+            const [views, likes, dislikes] = await Promise.all([
+                prisma.history.count({
+                    where: {
+                        id_video: video.id,
+                    }
+                }),
+                prisma.history.count({
+                    where: {
+                        id_video: video.id,
+                        id_reaction: 1
+                    }
+                }),
+                prisma.history.count({
+                    where: {
+                        id_video: video.id,
+                        id_reaction: 2
+                    }
+                })
+            ]);
 
             const ownerSubscribersCount = await prisma.subscriptions.count({//Подписчики
                 where: {
@@ -38,8 +58,12 @@ export const videosService = {
 
             return {
                 ...video,
-                ownerSubscribersCount
+                ownerSubscribersCount,
+                views,
+                likes,
+                dislikes
             };
+
         } catch (error) {
             return null;
         }
@@ -54,6 +78,11 @@ export const videosService = {
                         username: true,
                         avatar_url: true
                     }
+                },
+                _count: {
+                    select: {
+                        history: true
+                    }
                 }
             },
             skip: skip,
@@ -63,7 +92,8 @@ export const videosService = {
             .then(videos => videos.map(video => ({
                 ...video,
                 owner_username: video.users.username,
-                owner_channel_image: video.users.avatar_url
+                owner_channel_image: video.users.avatar_url,
+                views: video._count.history
             })));
 
         const totalCount = await prisma.videos.count();
@@ -81,6 +111,11 @@ export const videosService = {
                         username: true,
                         avatar_url: true
                     }
+                },
+                _count: {
+                    select: {
+                        history: true
+                    }
                 }
             },
             skip: skip,
@@ -90,11 +125,11 @@ export const videosService = {
             .then(videos => videos.map(video => ({
                 ...video,
                 owner_username: video.users.username,
-                owner_channel_image: video.users.avatar_url
+                owner_channel_image: video.users.avatar_url,
+                views: video._count.history
             })));
 
         const totalCount = myVideos.length;
-
         return { myVideos, totalCount };
     },
     async getVideosFromPlaylist(page: number, limit: number, playlist: playlists) {
@@ -104,7 +139,15 @@ export const videosService = {
             const playlistVideos = await prisma.playlist_videos.findMany({
                 where: { id_playlist: playlist.id },
                 include: {
-                    videos: true,
+                    videos: {
+                        include: {
+                            _count: {
+                                select: {
+                                    history: true
+                                }
+                            },
+                        },
+                    },
                     playlists: {
                         include: {
                             users: {
@@ -114,7 +157,7 @@ export const videosService = {
                                 }
                             }
                         }
-                    }
+                    },
                 },
                 skip: skip,
                 take: Number(limit),
@@ -124,6 +167,7 @@ export const videosService = {
                 ...video.videos,
                 owner_username: video.playlists.users.username,
                 owner_channel_image: video.playlists.users.avatar_url,
+                views: video.videos._count.history,
             }));
 
             return videos;
@@ -138,11 +182,19 @@ export const videosService = {
         const history = await prisma.history.findMany({
             where: { id_user: userId },
             include: {
-                videos: true,
-                users: {
-                    select: {
-                        username: true,
-                        avatar_url: true
+                videos: {
+                    include: {
+                        users: {
+                            select: {
+                                username: true,
+                                avatar_url: true
+                            }
+                        },
+                        _count: {
+                            select: {
+                                history: true
+                            }
+                        }
                     }
                 }
             },
@@ -153,8 +205,9 @@ export const videosService = {
 
         const videos = history.map(item => ({
             ...item.videos,
-            owner_username: item.users.username,
-            owner_avatar: item.users.avatar_url,
+            owner_username: item.videos.users.username,
+            owner_avatar: item.videos.users.avatar_url,
+            views: item.videos._count.history
         }));
 
         const totalCount = await prisma.history.count({
@@ -180,5 +233,41 @@ export const videosService = {
         });
 
         return deleteVideo;
-    }
+    },
+    async addVideoToHistory(userId: number, videoId: number) {
+        const historyRecord = await prisma.history.upsert({
+            where: {
+                id_user_id_video: {
+                    id_user: userId,
+                    id_video: videoId,
+                },
+            },
+            update: {
+                watched_at: new Date(),
+            },
+            create: {
+                id_user: userId,
+                id_video: videoId,
+                progress_percent: 0,
+                watched_at: new Date(),
+            }
+        });
+
+        return historyRecord;
+    },
+    async setReactionToVideo(userId: number, videoId: number, reactionId: number | null) {
+        const reaction = await prisma.history.update({
+            where: {
+                id_user_id_video: {
+                    id_user: userId,
+                    id_video: videoId
+                }
+            },
+            data: {
+                id_reaction: reactionId
+            }
+        });
+
+        return reaction;
+    },
 };

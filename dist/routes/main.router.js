@@ -21,11 +21,14 @@ exports.mainRoute.post('/videos', videos_controller_1.videosController.getAllVid
 exports.mainRoute.post('/videos/my-channel', auth_middleware_1.authMiddleware, videos_controller_1.videosController.getMyVideos);
 exports.mainRoute.post('/videos/upload', auth_middleware_1.authMiddleware, uploadFile_1.default, videos_controller_1.videosController.uploadVideo);
 exports.mainRoute.get('/videos/:url', auth_middleware_1.authMiddleware, videos_controller_1.videosController.getVideoByUrl);
+exports.mainRoute.patch('/videos/reaction/:url', auth_middleware_1.authMiddleware, videos_controller_1.videosController.setReactionToVideo);
 exports.mainRoute.get('/comments/:url', auth_middleware_1.authMiddleware, comments_controller_1.commentsController.getCommentsByVideoUrl);
 exports.mainRoute.post('/history', auth_middleware_1.authMiddleware, videos_controller_1.videosController.getHistoryVideos);
 exports.mainRoute.delete('/history/:id', auth_middleware_1.authMiddleware, videos_controller_1.videosController.deleteHistoryVideo);
+exports.mainRoute.post('/history/:url', auth_middleware_1.authMiddleware, videos_controller_1.videosController.addVideoToHistory);
 exports.mainRoute.get('/playlists', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.getAllPlaylists);
 exports.mainRoute.post('/playlists/:url', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.getPlaylistByUrl);
+exports.mainRoute.get('/playlist/:url', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.getPlaylistDataByUrl);
 exports.mainRoute.get('/channels', auth_middleware_1.authMiddleware, channels_controller_1.channelsController.getChannels);
 exports.mainRoute.patch('/user/configure', auth_middleware_1.authMiddleware, uploadFile_1.default, user_controller_1.userController.updateUser);
 exports.mainRoute.delete('/user/configure', auth_middleware_1.authMiddleware, user_controller_1.userController.unsetUserField);

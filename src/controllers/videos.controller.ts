@@ -3,6 +3,7 @@ import { videosService } from "../services/videos.service";
 import { videos } from "@prisma/client";
 import { tagsController } from "./tags.controller";
 import { playlistsService } from "../services/playlists.service";
+import { reactionService } from "../services/reactions.service";
 
 export const videosController = {//business
     getAllVideos: async (req: Request, res: Response) => {
@@ -23,9 +24,9 @@ export const videosController = {//business
 
             if (url) {
                 const video = await videosService.getVideoByUrl(url);
-
                 if (video) {
-                    res.status(200).json({ video });
+                    const reaction = await reactionService.isReacted(req.user.id, video.id)
+                    res.status(200).json({ video, reaction });
                 } else {
                     res.status(200).json({});
                 }
@@ -44,8 +45,6 @@ export const videosController = {//business
                 description: req.body.description ? req.body.description : null,
                 load_date: new Date(),
                 views: 0,
-                likes: 0,
-                dislikes: 0,
                 id_owner: +req.user.id,
                 id_access: +req.body.id_access,
                 id_category: +req.body.id_category,
@@ -112,6 +111,38 @@ export const videosController = {//business
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка при удалении видео из истории' + error });
+        }
+    },
+    addVideoToHistory: async (req: Request, res: Response) => {
+        try {
+            const userId = req.user.id;
+            const url = req.params.url;
+            const video = await videosService.getVideoByUrl(url);
+            if (!video || !video.id) return;
+            const data = await videosService.addVideoToHistory(userId, video.id);
+            res.status(200).json(data);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка добавления видео в историю просмотра: ' + error });
+        }
+    },
+    setReactionToVideo: async (req: Request, res: Response) => {//не сделано
+        try {
+            const userId = req.user.id;
+            const url = req.params.url;
+            const video = await videosService.getVideoByUrl(url);
+
+            const { reaction } = req.body;
+            let reactionId = null;
+            if (reaction === 'like') reactionId = 1;
+            if (reaction === 'dislike') reactionId = 2;
+
+            if (!video || !video.id) return;
+            const data = await videosService.setReactionToVideo(userId, video.id, reactionId);
+            res.status(200).json(data);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка оценки видео: ' + error });
         }
     },
 };
