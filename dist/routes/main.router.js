@@ -23,6 +23,8 @@ exports.mainRoute.post('/videos/upload', auth_middleware_1.authMiddleware, uploa
 exports.mainRoute.get('/videos/:url', auth_middleware_1.authMiddleware, videos_controller_1.videosController.getVideoByUrl);
 exports.mainRoute.patch('/videos/reaction/:url', auth_middleware_1.authMiddleware, videos_controller_1.videosController.setReactionToVideo);
 exports.mainRoute.get('/comments/:url', auth_middleware_1.authMiddleware, comments_controller_1.commentsController.getCommentsByVideoUrl);
+exports.mainRoute.post('/comments/:url', auth_middleware_1.authMiddleware, comments_controller_1.commentsController.addComment);
+exports.mainRoute.patch('/comments/reaction/:id', auth_middleware_1.authMiddleware, comments_controller_1.commentsController.setReactionToComment);
 exports.mainRoute.post('/history', auth_middleware_1.authMiddleware, videos_controller_1.videosController.getHistoryVideos);
 exports.mainRoute.delete('/history/:id', auth_middleware_1.authMiddleware, videos_controller_1.videosController.deleteHistoryVideo);
 exports.mainRoute.post('/history/:url', auth_middleware_1.authMiddleware, videos_controller_1.videosController.addVideoToHistory);

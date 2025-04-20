@@ -43,12 +43,10 @@ export const userController = {//business
 
     authUser: async (req: Request, res: Response) => {
         const body = req.body;
-
         const userData = {
             email: body.email,
             password: body.password
         };
-
         try {
             const user = await userService.findUser('email', userData.email);
 

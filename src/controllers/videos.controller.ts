@@ -44,7 +44,6 @@ export const videosController = {//business
                 name: req.body.name,
                 description: req.body.description ? req.body.description : null,
                 load_date: new Date(),
-                views: 0,
                 id_owner: +req.user.id,
                 id_access: +req.body.id_access,
                 id_category: +req.body.id_category,
@@ -138,7 +137,7 @@ export const videosController = {//business
             if (reaction === 'dislike') reactionId = 2;
 
             if (!video || !video.id) return;
-            const data = await videosService.setReactionToVideo(userId, video.id, reactionId);
+            const data = await videosService.setReaction(userId, video.id, reactionId);
             res.status(200).json(data);
         } catch (error) {
             console.log(error);

@@ -255,7 +255,7 @@ export const videosService = {
 
         return historyRecord;
     },
-    async setReactionToVideo(userId: number, videoId: number, reactionId: number | null) {
+    async setReaction(userId: number, videoId: number, reactionId: number | null) {
         const reaction = await prisma.history.update({
             where: {
                 id_user_id_video: {

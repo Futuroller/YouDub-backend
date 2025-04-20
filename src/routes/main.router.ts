@@ -19,6 +19,8 @@ mainRoute.post('/videos/upload', authMiddleware, upload, videosController.upload
 mainRoute.get('/videos/:url', authMiddleware, videosController.getVideoByUrl);
 mainRoute.patch('/videos/reaction/:url', authMiddleware, videosController.setReactionToVideo);
 mainRoute.get('/comments/:url', authMiddleware, commentsController.getCommentsByVideoUrl);
+mainRoute.post('/comments/:url', authMiddleware, commentsController.addComment);
+mainRoute.patch('/comments/reaction/:id', authMiddleware, commentsController.setReactionToComment);
 mainRoute.post('/history', authMiddleware, videosController.getHistoryVideos);
 mainRoute.delete('/history/:id', authMiddleware, videosController.deleteHistoryVideo);
 mainRoute.post('/history/:url', authMiddleware, videosController.addVideoToHistory);

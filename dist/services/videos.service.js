@@ -242,7 +242,7 @@ exports.videosService = {
             return historyRecord;
         });
     },
-    setReactionToVideo(userId, videoId, reactionId) {
+    setReaction(userId, videoId, reactionId) {
         return __awaiter(this, void 0, void 0, function* () {
             const reaction = yield prisma.history.update({
                 where: {
