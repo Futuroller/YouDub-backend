@@ -46,6 +46,8 @@ model playlist_videos {
   date_added  DateTime  @db.Timestamp(6)
   playlists   playlists @relation(fields: [id_playlist], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "playlist_videos_playlists_fk")
   videos      videos    @relation(fields: [id_video], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "playlist_videos_videos_fk")
+
+  @@unique([id_playlist, id_video], map: "id_playlist_id_video")
 }
 
 model playlists {
@@ -74,6 +76,8 @@ model subscriptions {
   subscribed_at                            DateTime @db.Timestamp(6)
   users_subscriptions_id_subscriberTousers users    @relation("subscriptions_id_subscriberTousers", fields: [id_subscriber], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscriptions_users_fk")
   users_subscriptions_id_channelTousers    users    @relation("subscriptions_id_channelTousers", fields: [id_channel], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscriptions_users_fk_1")
+
+  @@unique([id_subscriber, id_channel], map: "id_subscriber_id_channel")
 }
 
 model tags {
@@ -96,6 +100,7 @@ model users {
   is_banned                                        Boolean                 @default(false)
   ban_reason                                       String?                 @db.VarChar
   channel_header_url                               String?                 @db.VarChar
+  tagname                                          String                  @unique(map: "unique_tagname") @db.VarChar
   comments                                         comments[]
   favorite_categories                              favorite_categories[]
   history                                          history[]

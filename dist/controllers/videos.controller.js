@@ -14,11 +14,15 @@ const videos_service_1 = require("../services/videos.service");
 const tags_controller_1 = require("./tags.controller");
 const playlists_service_1 = require("../services/playlists.service");
 const reactions_service_1 = require("../services/reactions.service");
+const user_service_1 = require("../services/user.service");
+const categories_service_1 = require("../services/categories.service");
 exports.videosController = {
-    getAllVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    getRecommendations: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { page = 1, limit = 10 } = req.body;
-            const data = yield videos_service_1.videosService.getAllVideos(Number(page), Number(limit));
+            const { page = 1, limit = 12 } = req.body;
+            const userId = req.user.id;
+            const categories = yield categories_service_1.categoriesService.getUsersCategories(userId);
+            const data = yield videos_service_1.videosService.getRecommendations(Number(page), Number(limit), categories);
             res.status(200).json(data);
         }
         catch (error) {
@@ -30,7 +34,7 @@ exports.videosController = {
         try {
             const url = req.params.url;
             if (url) {
-                const video = yield videos_service_1.videosService.getVideoByUrl(url);
+                const video = yield videos_service_1.videosService.getVideoByUrl(url, req.user.id);
                 if (video) {
                     const reaction = yield reactions_service_1.reactionService.isReacted(req.user.id, video.id);
                     res.status(200).json({ video, reaction });
@@ -75,7 +79,7 @@ exports.videosController = {
             let playlistVideo;
             if (video) {
                 if (req.body.tags) {
-                    tagsIds = yield tags_controller_1.tagsController.addTagsToVideo(req.body.tags, video.id);
+                    tagsIds = yield tags_controller_1.tagsController.addTagsToVideo(JSON.parse(req.body.tags), video.id);
                 }
                 if (req.body.id_playlist) {
                     playlistVideo = yield playlists_service_1.playlistsService.addVideoToPlaylist(video.id, +req.body.id_playlist);
@@ -88,15 +92,21 @@ exports.videosController = {
             res.status(500).json({ message: 'Ошибка при загрузке видео' + error });
         }
     }),
-    getMyVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    getVideosFromChannel: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { page = 1, limit = 10 } = req.body;
-            const data = yield videos_service_1.videosService.getMyVideos(Number(page), Number(limit), req.user.id);
+            const tagname = req.params.tagname;
+            const user = yield user_service_1.userService.findUser('tagname', tagname);
+            if (!user) {
+                res.status(500).json({ message: 'Пользователь не найден' });
+                return;
+            }
+            const data = yield videos_service_1.videosService.getVideosFromChannel(Number(page), Number(limit), user.id);
             res.status(200).json(data);
         }
         catch (error) {
             console.log(error);
-            res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
+            res.status(500).json({ message: 'Ошибка при получении видео с канала ' + error });
         }
     }),
     getHistoryVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -124,7 +134,7 @@ exports.videosController = {
         try {
             const userId = req.user.id;
             const url = req.params.url;
-            const video = yield videos_service_1.videosService.getVideoByUrl(url);
+            const video = yield videos_service_1.videosService.getVideoByUrl(url, userId);
             if (!video || !video.id)
                 return;
             const data = yield videos_service_1.videosService.addVideoToHistory(userId, video.id);
@@ -139,7 +149,7 @@ exports.videosController = {
         try {
             const userId = req.user.id;
             const url = req.params.url;
-            const video = yield videos_service_1.videosService.getVideoByUrl(url);
+            const video = yield videos_service_1.videosService.getVideoByUrl(url, userId);
             const { reaction } = req.body;
             let reactionId = null;
             if (reaction === 'like')
@@ -149,11 +159,34 @@ exports.videosController = {
             if (!video || !video.id)
                 return;
             const data = yield videos_service_1.videosService.setReaction(userId, video.id, reactionId);
+            const likedPlaylist = yield playlists_service_1.playlistsService.getUserLikedPlaylist(userId);
+            if (likedPlaylist != null) {
+                if (reactionId === 1) {
+                    yield playlists_service_1.playlistsService.addVideoToPlaylist(video.id, likedPlaylist.id);
+                }
+                else {
+                    yield playlists_service_1.playlistsService.removeVideoFromPlaylist(video.id, likedPlaylist.id);
+                }
+            }
+            else {
+                throw new Error('Ошибка поиска плейлиста "Понравившиеся": ');
+            }
             res.status(200).json(data);
         }
         catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка оценки видео: ' + error });
+        }
+    }),
+    getSubVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const { page = 1, limit = 10 } = req.body;
+            const data = yield videos_service_1.videosService.getSubVideos(Number(page), Number(limit), req.user.id);
+            res.status(200).json(data);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
         }
     }),
 };

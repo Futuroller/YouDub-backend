@@ -1,9 +1,10 @@
 import { tagsService } from "../services/tags.service";
 
-export const tagsController = {//business
+export const tagsController = {
     async addTagsToVideo(tags: string[], videoId: number) {
         try {
-            if (!Array.isArray(tags) || isNaN(videoId)) {
+            const parsedId = Number(videoId);
+            if (!Array.isArray(tags) || isNaN(parsedId)) {
                 throw new Error('Некорректные теги или videoId');
             }
 

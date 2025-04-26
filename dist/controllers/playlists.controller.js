@@ -82,4 +82,27 @@ exports.playlistsController = {
             res.status(500).json({ message: 'Ошибка при получении данных о плейлисте: ' + error });
         }
     }),
+    addVideoToPlaylist: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const url = req.params.url;
+            const videoId = req.body.videoId;
+            if (url) {
+                const playlist = yield playlists_service_1.playlistsService.getPlaylistByUrl(url);
+                if (playlist) {
+                    const addedVideo = yield videos_service_1.videosService.addVideoToPlaylist(playlist.id, videoId);
+                    res.status(200).json({ addedVideo });
+                }
+                else {
+                    res.status(500).json({ message: 'Ошибка при получении плейлиста' });
+                }
+            }
+            else {
+                res.status(500).json({});
+            }
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка добавления видео в плейлист: ' + error });
+        }
+    }),
 };

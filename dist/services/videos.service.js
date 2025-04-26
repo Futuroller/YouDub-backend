@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.videosService = void 0;
 const client_1 = require("@prisma/client");
+const channels_service_1 = require("./channels.service");
 const prisma = new client_1.PrismaClient();
 exports.videosService = {
     createVideo(videoData) {
@@ -29,7 +30,7 @@ exports.videosService = {
             }
         });
     },
-    getVideoByUrl(url) {
+    getVideoByUrl(url, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 let video = yield prisma.videos.findFirstOrThrow({
@@ -39,6 +40,7 @@ exports.videosService = {
                             select: {
                                 username: true,
                                 avatar_url: true,
+                                tagname: true,
                             },
                         },
                     }
@@ -62,6 +64,7 @@ exports.videosService = {
                         }
                     })
                 ]);
+                const isFollowed = yield channels_service_1.channelsService.isFollowed(video.id_owner, userId);
                 const ownerSubscribersCount = yield prisma.subscriptions.count({
                     where: {
                         id_channel: video.id_owner
@@ -70,17 +73,24 @@ exports.videosService = {
                 return Object.assign(Object.assign({}, video), { ownerSubscribersCount,
                     views,
                     likes,
-                    dislikes });
+                    dislikes,
+                    isFollowed });
             }
             catch (error) {
                 return null;
             }
         });
     },
-    getAllVideos(page, limit) {
+    getRecommendations(page, limit, categories) {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
+            const categoryIds = categories.map(c => c.id);
             let videos = yield prisma.videos.findMany({
+                where: {
+                    id_category: {
+                        in: categoryIds
+                    }
+                },
                 include: {
                     users: {
                         select: {
@@ -103,7 +113,7 @@ exports.videosService = {
             return { videos, totalCount };
         });
     },
-    getMyVideos(page, limit, userId) {
+    getVideosFromChannel(page, limit, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
             let myVideos = yield prisma.videos.findMany({
@@ -204,6 +214,38 @@ exports.videosService = {
             return { videos, totalCount };
         });
     },
+    getSubVideos(page, limit, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const skip = (page - 1) * limit;
+            const subVideos = yield prisma.subscriptions.findMany({
+                where: { id_subscriber: userId },
+                select: {
+                    users_subscriptions_id_channelTousers: {
+                        include: {
+                            videos: true,
+                            _count: {
+                                select: {
+                                    history: true
+                                }
+                            }
+                        }
+                    }
+                },
+                skip: skip,
+                take: Number(limit),
+            });
+            const videos = subVideos.flatMap(item => {
+                const owner = item.users_subscriptions_id_channelTousers;
+                return owner.videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: owner.username, owner_channel_image: owner.avatar_url, views: owner._count.history })));
+            });
+            const totalCount = yield prisma.history.count({
+                where: {
+                    id_user: userId
+                }
+            });
+            return { videos, totalCount };
+        });
+    },
     deleteHistoryVideo(videoId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const currentVideo = yield prisma.history.findFirstOrThrow({
@@ -240,6 +282,23 @@ exports.videosService = {
                 }
             });
             return historyRecord;
+        });
+    },
+    addVideoToPlaylist(playlistId, videoId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const result = yield prisma.playlist_videos.create({
+                    data: {
+                        id_playlist: playlistId,
+                        id_video: videoId,
+                        date_added: new Date(),
+                    }
+                });
+                return result;
+            }
+            catch (error) {
+                throw new Error('Ошибка добавления видео в плейлист: ' + error);
+            }
         });
     },
     setReaction(userId, videoId, reactionId) {

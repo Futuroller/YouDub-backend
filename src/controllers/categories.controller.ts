@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import { categoriesService } from "../services/categories.service";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { categories, favorite_categories, PrismaClient } from "@prisma/client";
 
 export const categoriesController = {
     getAllCategories: async (req: Request, res: Response) => {

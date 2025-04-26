@@ -60,6 +60,22 @@ exports.commentsController = {
             res.status(500).json({ message: 'Ошибка при загрузке комментариев: ' + error });
         }
     }),
+    removeComment: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const id = +req.params.id;
+            if (id) {
+                const removedComment = yield comments_service_1.commentsService.deleteComment(id);
+                res.status(200).json({ removedComment });
+            }
+            else {
+                res.status(500).json({ message: 'Ошибка при удалении комментария: не передан id' });
+            }
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при удалении комментария: ' + error });
+        }
+    }),
     setReactionToComment: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const userId = req.user.id;

@@ -41,7 +41,7 @@ export const userService = {
                 subscriptionsCount
             };
         } catch (error) {
-            return { message: "Пользователь не найден" };
+            return null;
         } finally {
             await prisma.$disconnect();
         }

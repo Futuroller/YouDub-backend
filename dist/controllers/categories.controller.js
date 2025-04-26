@@ -11,8 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.categoriesController = void 0;
 const categories_service_1 = require("../services/categories.service");
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
 exports.categoriesController = {
     getAllCategories: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {

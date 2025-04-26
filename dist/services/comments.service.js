@@ -35,6 +35,7 @@ exports.commentsService = {
                         comment_text: true,
                         users: {
                             select: {
+                                id: true,
                                 username: true,
                                 avatar_url: true,
                             },
@@ -94,6 +95,22 @@ exports.commentsService = {
             catch (error) {
                 console.log(error);
                 return null;
+            }
+        });
+    },
+    deleteComment(commentId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let comment = yield prisma.comments.delete({
+                    where: {
+                        id: commentId,
+                    }
+                });
+                return comment;
+            }
+            catch (error) {
+                console.log(error);
+                throw new Error('Ошибка при удалении комментария: ' + error);
             }
         });
     },

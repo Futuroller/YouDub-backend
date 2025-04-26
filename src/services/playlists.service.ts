@@ -32,6 +32,20 @@ export const playlistsService = {
             return null;
         }
     },
+    async getUserLikedPlaylist(userId: number) {
+        try {
+            let likedPlaylist = await prisma.playlists.findFirstOrThrow({
+                where: {
+                    id_user: userId,
+                    name: 'Понравившиеся'
+                },
+            });
+
+            return likedPlaylist;
+        } catch (error) {
+            return null;
+        }
+    },
     async createDefaultPlaylists(userId: number) {
         try {
             const watchLater = await prisma.playlists.create({
@@ -66,6 +80,19 @@ export const playlistsService = {
                     id_video: videoId,
                     id_playlist: playlistId,
                     date_added: new Date()
+                }
+            });
+            return playlistVideo;
+        } catch (error) {
+            throw new Error(`Ошибка при добавлении видео в плейлист: ${error}`);
+        }
+    },
+    async removeVideoFromPlaylist(videoId: number, playlistId: number) {
+        try {
+            const playlistVideo = await prisma.playlist_videos.deleteMany({
+                where: {
+                    id_playlist: playlistId,
+                    id_video: videoId
                 }
             });
             return playlistVideo;

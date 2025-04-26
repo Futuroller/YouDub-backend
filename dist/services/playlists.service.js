@@ -44,6 +44,22 @@ exports.playlistsService = {
             }
         });
     },
+    getUserLikedPlaylist(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let likedPlaylist = yield prisma.playlists.findFirstOrThrow({
+                    where: {
+                        id_user: userId,
+                        name: 'Понравившиеся'
+                    },
+                });
+                return likedPlaylist;
+            }
+            catch (error) {
+                return null;
+            }
+        });
+    },
     createDefaultPlaylists(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -82,6 +98,22 @@ exports.playlistsService = {
                         id_video: videoId,
                         id_playlist: playlistId,
                         date_added: new Date()
+                    }
+                });
+                return playlistVideo;
+            }
+            catch (error) {
+                throw new Error(`Ошибка при добавлении видео в плейлист: ${error}`);
+            }
+        });
+    },
+    removeVideoFromPlaylist(videoId, playlistId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const playlistVideo = yield prisma.playlist_videos.deleteMany({
+                    where: {
+                        id_playlist: playlistId,
+                        id_video: videoId
                     }
                 });
                 return playlistVideo;

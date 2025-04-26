@@ -50,7 +50,7 @@ exports.userService = {
                     subscriptionsCount });
             }
             catch (error) {
-                return { message: "Пользователь не найден" };
+                return null;
             }
             finally {
                 yield prisma.$disconnect();

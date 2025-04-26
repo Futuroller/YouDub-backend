@@ -1,4 +1,5 @@
-import { playlists, PrismaClient, videos } from "@prisma/client";
+import { categories, favorite_categories, playlists, PrismaClient, videos } from "@prisma/client";
+import { channelsService } from "./channels.service";
 
 const prisma = new PrismaClient();
 
@@ -16,7 +17,7 @@ export const videosService = {
             await prisma.$disconnect();
         }
     },
-    async getVideoByUrl(url: string) {
+    async getVideoByUrl(url: string, userId: number) {
         try {
             let video = await prisma.videos.findFirstOrThrow({
                 where: { url: url },
@@ -25,6 +26,7 @@ export const videosService = {
                         select: {
                             username: true,
                             avatar_url: true,
+                            tagname: true,
                         },
                     },
                 }
@@ -50,6 +52,8 @@ export const videosService = {
                 })
             ]);
 
+            const isFollowed = await channelsService.isFollowed(video.id_owner, userId);
+
             const ownerSubscribersCount = await prisma.subscriptions.count({//Подписчики
                 where: {
                     id_channel: video.id_owner
@@ -61,17 +65,24 @@ export const videosService = {
                 ownerSubscribersCount,
                 views,
                 likes,
-                dislikes
+                dislikes,
+                isFollowed
             };
 
         } catch (error) {
             return null;
         }
     },
-    async getAllVideos(page: number, limit: number) {
+    async getRecommendations(page: number, limit: number, categories: categories[]) {
         const skip = (page - 1) * limit;
+        const categoryIds = categories.map(c => c.id);
 
         let videos = await prisma.videos.findMany({
+            where: {
+                id_category: {
+                    in: categoryIds
+                }
+            },
             include: {
                 users: {
                     select: {
@@ -100,7 +111,7 @@ export const videosService = {
 
         return { videos, totalCount };
     },
-    async getMyVideos(page: number, limit: number, userId: number) {
+    async getVideosFromChannel(page: number, limit: number, userId: number) {
         const skip = (page - 1) * limit;
 
         let myVideos = await prisma.videos.findMany({
@@ -218,6 +229,46 @@ export const videosService = {
 
         return { videos, totalCount };
     },
+    async getSubVideos(page: number, limit: number, userId: number) {
+        const skip = (page - 1) * limit;
+
+        const subVideos = await prisma.subscriptions.findMany({
+            where: { id_subscriber: userId },
+            select: {
+                users_subscriptions_id_channelTousers: { // Достаем пользователей (каналы)
+                    include: {
+                        videos: true,
+                        _count: {
+                            select: {
+                                history: true
+                            }
+                        }
+                    }
+                }
+            },
+            skip: skip,
+            take: Number(limit),
+        });
+
+        const videos = subVideos.flatMap(item => {
+            const owner = item.users_subscriptions_id_channelTousers;
+
+            return owner.videos.map(video => ({
+                ...video,
+                owner_username: owner.username,
+                owner_channel_image: owner.avatar_url,
+                views: owner._count.history,
+            }));
+        })
+
+        const totalCount = await prisma.history.count({
+            where: {
+                id_user: userId
+            }
+        });
+
+        return { videos, totalCount };
+    },
     async deleteHistoryVideo(videoId: number, userId: number) {
         const currentVideo = await prisma.history.findFirstOrThrow({
             where: {
@@ -254,6 +305,21 @@ export const videosService = {
         });
 
         return historyRecord;
+    },
+    async addVideoToPlaylist(playlistId: number, videoId: number) {
+        try {
+            const result = await prisma.playlist_videos.create({
+                data: {
+                    id_playlist: playlistId,
+                    id_video: videoId,
+                    date_added: new Date(),
+                }
+            });
+
+            return result;
+        } catch (error) {
+            throw new Error('Ошибка добавления видео в плейлист: ' + error)
+        }
     },
     async setReaction(userId: number, videoId: number, reactionId: number | null) {
         const reaction = await prisma.history.update({

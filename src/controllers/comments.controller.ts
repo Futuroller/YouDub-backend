@@ -50,6 +50,21 @@ export const commentsController = {//business
             res.status(500).json({ message: 'Ошибка при загрузке комментариев: ' + error });
         }
     },
+    removeComment: async (req: Request, res: Response) => {
+        try {
+            const id = +req.params.id;
+
+            if (id) {
+                const removedComment = await commentsService.deleteComment(id);
+                res.status(200).json({ removedComment });
+            } else {
+                res.status(500).json({ message: 'Ошибка при удалении комментария: не передан id' });
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при удалении комментария: ' + error });
+        }
+    },
     setReactionToComment: async (req: Request, res: Response) => {//не сделано
         try {
             const userId = req.user.id;

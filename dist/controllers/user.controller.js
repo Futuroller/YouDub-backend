@@ -31,10 +31,25 @@ const crypto_1 = __importDefault(require("crypto"));
 const mailService_1 = require("../utils/mailService");
 const playlists_service_1 = require("../services/playlists.service");
 const deleteFile_1 = require("../utils/deleteFile");
+const generateUniqueName_1 = require("../utils/generateUniqueName");
+const categories_service_1 = require("../services/categories.service");
 exports.userController = {
     addUser: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const body = req.body;
         const hashedPassword = yield bcrypt_1.default.hash(body.password, 5);
+        let tagname;
+        try {
+            do {
+                tagname = (0, generateUniqueName_1.generateUniqueName)(body.username);
+                const user = yield user_service_1.userService.findUser('tagname', tagname);
+                if (!user) {
+                    break;
+                }
+            } while (true);
+        }
+        catch (error) {
+            console.log(error);
+        }
         const activationLink = crypto_1.default.randomUUID();
         const userData = {
             username: body.username,
@@ -43,6 +58,7 @@ exports.userController = {
             password_hash: hashedPassword,
             id_role: 1,
             activation_link: activationLink,
+            tagname: tagname
         };
         try {
             yield user_service_1.userService.createUser(userData);
@@ -51,6 +67,7 @@ exports.userController = {
                 res.status(500).json({ message: "Ошибка сервера" });
                 return;
             }
+            const categories = yield categories_service_1.categoriesService.addCategoriesToUser(user.id, body.categories);
             yield (0, mailService_1.sendActivationEmail)(user.email, activationLink);
             res.status(201).json(user);
         }
@@ -114,6 +131,10 @@ exports.userController = {
         try {
             const userId = req.user.id;
             const user = yield user_service_1.userService.findUser('id', userId);
+            if (user === null) {
+                res.status(404).json({ message: 'Пользователь не найден' });
+                return;
+            }
             const updatedFields = Object.assign({}, req.body);
             if (req.files) {
                 const files = req.files;

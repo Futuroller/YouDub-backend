@@ -21,4 +21,28 @@ exports.categoriesService = {
             return categories;
         });
     },
+    addCategoriesToUser(userId, categoriesArray) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userCategories = yield prisma.favorite_categories.createMany({
+                data: categoriesArray.map(c => ({
+                    id_user: userId,
+                    id_category: c.id
+                }))
+            });
+            return userCategories;
+        });
+    },
+    getUsersCategories(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const categories = yield prisma.favorite_categories.findMany({
+                where: {
+                    id_user: userId
+                },
+                select: {
+                    categories: true
+                }
+            }).then(categories => categories.map(c => c.categories));
+            return categories;
+        });
+    },
 };

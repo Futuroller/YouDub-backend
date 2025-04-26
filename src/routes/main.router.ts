@@ -13,13 +13,16 @@ mainRoute.get('/', authMiddleware, (req: Request, res: Response) => {
     res.status(200).json(req.user);
 });
 
-mainRoute.post('/videos', videosController.getAllVideos);
-mainRoute.post('/videos/my-channel', authMiddleware, videosController.getMyVideos);
+mainRoute.post('/videos', authMiddleware, videosController.getRecommendations);
+mainRoute.post('/videos/channel/:tagname', authMiddleware, videosController.getVideosFromChannel);
+mainRoute.post('/videos/channels', authMiddleware, videosController.getSubVideos);
 mainRoute.post('/videos/upload', authMiddleware, upload, videosController.uploadVideo);
 mainRoute.get('/videos/:url', authMiddleware, videosController.getVideoByUrl);
 mainRoute.patch('/videos/reaction/:url', authMiddleware, videosController.setReactionToVideo);
+mainRoute.patch('/videos/reaction/:url', authMiddleware, videosController.setReactionToVideo);
 mainRoute.get('/comments/:url', authMiddleware, commentsController.getCommentsByVideoUrl);
 mainRoute.post('/comments/:url', authMiddleware, commentsController.addComment);
+mainRoute.delete('/comments/:id', authMiddleware, commentsController.removeComment);
 mainRoute.patch('/comments/reaction/:id', authMiddleware, commentsController.setReactionToComment);
 mainRoute.post('/history', authMiddleware, videosController.getHistoryVideos);
 mainRoute.delete('/history/:id', authMiddleware, videosController.deleteHistoryVideo);
@@ -27,7 +30,11 @@ mainRoute.post('/history/:url', authMiddleware, videosController.addVideoToHisto
 mainRoute.get('/playlists', authMiddleware, playlistsController.getAllPlaylists);
 mainRoute.post('/playlists/:url', authMiddleware, playlistsController.getPlaylistByUrl);
 mainRoute.get('/playlist/:url', authMiddleware, playlistsController.getPlaylistDataByUrl);
+mainRoute.patch('/playlists/video/:url', authMiddleware, playlistsController.addVideoToPlaylist);
 mainRoute.get('/channels', authMiddleware, channelsController.getChannels);
+mainRoute.get('/channels/:tagname', authMiddleware, channelsController.getChannelByTagname);
+mainRoute.post('/channels/subscription/:tagname', authMiddleware, channelsController.subscribe);
+mainRoute.delete('/channels/subscription/:tagname', authMiddleware, channelsController.unsubscribe);
 mainRoute.patch('/user/configure', authMiddleware, upload, userController.updateUser);
 mainRoute.delete('/user/configure', authMiddleware, userController.unsetUserField);
-mainRoute.get('/categories', authMiddleware, categoriesController.getAllCategories);
+mainRoute.get('/categories', categoriesController.getAllCategories);

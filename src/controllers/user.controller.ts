@@ -6,12 +6,25 @@ import crypto from 'crypto';
 import { sendActivationEmail } from "../utils/mailService";
 import { playlistsService } from "../services/playlists.service";
 import { deleteFile } from "../utils/deleteFile";
-
+import { generateUniqueName } from "../utils/generateUniqueName";
+import { categoriesService } from "../services/categories.service";
 
 export const userController = {//business
     addUser: async (req: Request, res: Response) => {
         const body = req.body;
         const hashedPassword = await bcrypt.hash(body.password, 5);
+        let tagname;
+        try {
+            do {
+                tagname = generateUniqueName(body.username);
+                const user = await userService.findUser('tagname', tagname);
+                if (!user) {
+                    break;
+                }
+            } while (true);
+        } catch (error) {
+            console.log(error);
+        }
 
         const activationLink = crypto.randomUUID();
 
@@ -22,6 +35,7 @@ export const userController = {//business
             password_hash: hashedPassword,
             id_role: 1,
             activation_link: activationLink,
+            tagname: tagname
         };
 
         try {
@@ -32,6 +46,7 @@ export const userController = {//business
                 res.status(500).json({ message: "Ошибка сервера" });
                 return;
             }
+            const categories = await categoriesService.addCategoriesToUser(user.id, body.categories);
             await sendActivationEmail(user.email, activationLink);
 
             res.status(201).json(user);
@@ -106,6 +121,11 @@ export const userController = {//business
         try {
             const userId = req.user.id;
             const user = await userService.findUser('id', userId);
+            if (user === null) {
+                res.status(404).json({ message: 'Пользователь не найден' });
+                return;
+            }
+
             const updatedFields = { ...req.body };
 
             if (req.files) {

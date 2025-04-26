@@ -4,13 +4,17 @@ import { videos } from "@prisma/client";
 import { tagsController } from "./tags.controller";
 import { playlistsService } from "../services/playlists.service";
 import { reactionService } from "../services/reactions.service";
+import { userService } from "../services/user.service";
+import { categoriesService } from "../services/categories.service";
 
 export const videosController = {//business
-    getAllVideos: async (req: Request, res: Response) => {
+    getRecommendations: async (req: Request, res: Response) => {
         try {
-            const { page = 1, limit = 10 } = req.body;
+            const { page = 1, limit = 12 } = req.body;
+            const userId = req.user.id;
 
-            const data = await videosService.getAllVideos(Number(page), Number(limit));
+            const categories = await categoriesService.getUsersCategories(userId);
+            const data = await videosService.getRecommendations(Number(page), Number(limit), categories);
 
             res.status(200).json(data);
         } catch (error) {
@@ -23,7 +27,7 @@ export const videosController = {//business
             const url = req.params.url;
 
             if (url) {
-                const video = await videosService.getVideoByUrl(url);
+                const video = await videosService.getVideoByUrl(url, req.user.id);
                 if (video) {
                     const reaction = await reactionService.isReacted(req.user.id, video.id)
                     res.status(200).json({ video, reaction });
@@ -68,7 +72,7 @@ export const videosController = {//business
 
             if (video) {
                 if (req.body.tags) {
-                    tagsIds = await tagsController.addTagsToVideo(req.body.tags, video.id)
+                    tagsIds = await tagsController.addTagsToVideo(JSON.parse(req.body.tags), video.id)
                 }
                 if (req.body.id_playlist) {
                     playlistVideo = await playlistsService.addVideoToPlaylist(video.id, +req.body.id_playlist);
@@ -81,15 +85,22 @@ export const videosController = {//business
             res.status(500).json({ message: 'Ошибка при загрузке видео' + error });
         }
     },
-    getMyVideos: async (req: Request, res: Response) => {
+    getVideosFromChannel: async (req: Request, res: Response) => {
         try {
             const { page = 1, limit = 10 } = req.body;
+            const tagname = req.params.tagname;
+            const user = await userService.findUser('tagname', tagname);
 
-            const data = await videosService.getMyVideos(Number(page), Number(limit), req.user.id);
+            if (!user) {
+                res.status(500).json({ message: 'Пользователь не найден' });
+                return;
+            }
+
+            const data = await videosService.getVideosFromChannel(Number(page), Number(limit), user.id);
             res.status(200).json(data);
         } catch (error) {
             console.log(error);
-            res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
+            res.status(500).json({ message: 'Ошибка при получении видео с канала ' + error });
         }
     },
     getHistoryVideos: async (req: Request, res: Response) => {
@@ -116,7 +127,7 @@ export const videosController = {//business
         try {
             const userId = req.user.id;
             const url = req.params.url;
-            const video = await videosService.getVideoByUrl(url);
+            const video = await videosService.getVideoByUrl(url, userId);
             if (!video || !video.id) return;
             const data = await videosService.addVideoToHistory(userId, video.id);
             res.status(200).json(data);
@@ -125,11 +136,11 @@ export const videosController = {//business
             res.status(500).json({ message: 'Ошибка добавления видео в историю просмотра: ' + error });
         }
     },
-    setReactionToVideo: async (req: Request, res: Response) => {//не сделано
+    setReactionToVideo: async (req: Request, res: Response) => {
         try {
             const userId = req.user.id;
             const url = req.params.url;
-            const video = await videosService.getVideoByUrl(url);
+            const video = await videosService.getVideoByUrl(url, userId);
 
             const { reaction } = req.body;
             let reactionId = null;
@@ -138,10 +149,31 @@ export const videosController = {//business
 
             if (!video || !video.id) return;
             const data = await videosService.setReaction(userId, video.id, reactionId);
+            const likedPlaylist = await playlistsService.getUserLikedPlaylist(userId);
+            if (likedPlaylist != null) {
+                if (reactionId === 1) {
+                    await playlistsService.addVideoToPlaylist(video.id, likedPlaylist.id);
+                } else {
+                    await playlistsService.removeVideoFromPlaylist(video.id, likedPlaylist.id);
+                }
+            } else {
+                throw new Error('Ошибка поиска плейлиста "Понравившиеся": ');
+            }
             res.status(200).json(data);
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка оценки видео: ' + error });
+        }
+    },
+    getSubVideos: async (req: Request, res: Response) => {
+        try {
+            const { page = 1, limit = 10 } = req.body;
+
+            const data = await videosService.getSubVideos(Number(page), Number(limit), req.user.id);
+            res.status(200).json(data);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
         }
     },
 };

@@ -15,7 +15,8 @@ exports.tagsController = {
     addTagsToVideo(tags, videoId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                if (!Array.isArray(tags) || isNaN(videoId)) {
+                const parsedId = Number(videoId);
+                if (!Array.isArray(tags) || isNaN(parsedId)) {
                     throw new Error('Некорректные теги или videoId');
                 }
                 const tagIds = yield tags_service_1.tagsService.upsertTags(tags, videoId);
