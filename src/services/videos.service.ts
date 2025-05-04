@@ -1,5 +1,6 @@
 import { categories, favorite_categories, playlists, PrismaClient, videos } from "@prisma/client";
 import { channelsService } from "./channels.service";
+import Fuse from "fuse.js";
 
 const prisma = new PrismaClient();
 
@@ -52,6 +53,18 @@ export const videosService = {
                 })
             ]);
 
+            const progressPercentObj = await prisma.history.findFirst({
+                where: {
+                    id_user: userId,
+                    id_video: video.id
+                },
+                select: {
+                    progress_percent: true,
+                }
+            });
+
+            let progressPercent = progressPercentObj && 'progress_percent' in progressPercentObj ? progressPercentObj.progress_percent : 0
+
             const isFollowed = await channelsService.isFollowed(video.id_owner, userId);
 
             const ownerSubscribersCount = await prisma.subscriptions.count({//Подписчики
@@ -66,18 +79,19 @@ export const videosService = {
                 views,
                 likes,
                 dislikes,
-                isFollowed
+                progressPercent,
+                isFollowed,
             };
 
         } catch (error) {
             return null;
         }
     },
-    async getRecommendations(page: number, limit: number, categories: categories[]) {
+    async getRecommendations(page: number, limit: number, categories: categories[], userId: number) {
         const skip = (page - 1) * limit;
         const categoryIds = categories.map(c => c.id);
 
-        let videos = await prisma.videos.findMany({
+        const videos = await prisma.videos.findMany({
             where: {
                 id_category: {
                     in: categoryIds
@@ -88,6 +102,14 @@ export const videosService = {
                     select: {
                         username: true,
                         avatar_url: true
+                    }
+                },
+                history: {
+                    where: {
+                        id_user: userId
+                    },
+                    select: {
+                        progress_percent: true
                     }
                 },
                 _count: {
@@ -104,10 +126,59 @@ export const videosService = {
                 ...video,
                 owner_username: video.users.username,
                 owner_channel_image: video.users.avatar_url,
-                views: video._count.history
+                views: video._count.history,
+                progress_percent: video.history[0]?.progress_percent || 0
             })));
 
-        const totalCount = await prisma.videos.count();
+        const totalCount = videos.length;
+
+        return { videos, totalCount };
+    },
+    async getVideosByQuery(page: number, limit: number, searchQuery: string) {
+        const skip = (page - 1) * limit;
+
+        const videos = await prisma.videos.findMany({
+            where: {
+                OR: [
+                    { name: { contains: searchQuery, mode: 'insensitive' } },
+                    { description: { contains: searchQuery, mode: 'insensitive' } },
+                    { users: { username: { contains: searchQuery, mode: 'insensitive' } } },
+                    { video_tags: { some: { tags: { name: { contains: searchQuery, mode: 'insensitive' } } } } }
+                ]
+            },
+            include: {
+                users: {
+                    select: {
+                        username: true,
+                        avatar_url: true
+                    }
+                },
+                _count: {
+                    select: {
+                        history: true
+                    }
+                },
+                video_tags: {
+                    select: {
+                        tags: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
+            },
+            skip: skip,
+            take: Number(limit),
+            orderBy: { load_date: 'desc' }
+        }).then(videos => videos.map(video => ({
+            ...video,
+            owner_username: video.users.username,
+            owner_channel_image: video.users.avatar_url,
+            views: video._count.history,
+        })));
+
+        const totalCount = videos.length;
 
         return { videos, totalCount };
     },
@@ -192,7 +263,8 @@ export const videosService = {
 
         const history = await prisma.history.findMany({
             where: { id_user: userId },
-            include: {
+            select: {
+                watched_at: true,
                 videos: {
                     include: {
                         users: {
@@ -218,7 +290,8 @@ export const videosService = {
             ...item.videos,
             owner_username: item.videos.users.username,
             owner_avatar: item.videos.users.avatar_url,
-            views: item.videos._count.history
+            views: item.videos._count.history,
+            watched_at: item.watched_at
         }));
 
         const totalCount = await prisma.history.count({
@@ -268,6 +341,15 @@ export const videosService = {
         });
 
         return { videos, totalCount };
+    },
+    async cleanHistory(userId: number) {
+        const deletedHistory = await prisma.history.deleteMany({
+            where: {
+                id_user: userId
+            }
+        });
+
+        return deletedHistory;
     },
     async deleteHistoryVideo(videoId: number, userId: number) {
         const currentVideo = await prisma.history.findFirstOrThrow({
@@ -335,5 +417,20 @@ export const videosService = {
         });
 
         return reaction;
+    },
+    async updateViewProgress(userId: number, videoId: number, progressPercent: number) {
+        const historyRecord = await prisma.history.update({
+            where: {
+                id_user_id_video: {
+                    id_user: userId,
+                    id_video: videoId
+                }
+            },
+            data: {
+                progress_percent: progressPercent
+            }
+        });
+
+        return historyRecord;
     },
 };

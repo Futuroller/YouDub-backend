@@ -8,10 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.playlistsController = void 0;
 const playlists_service_1 = require("../services/playlists.service");
 const videos_service_1 = require("../services/videos.service");
+const crypto_1 = __importDefault(require("crypto"));
 exports.playlistsController = {
     getAllPlaylists: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -26,6 +30,35 @@ exports.playlistsController = {
         catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка при получении плейлистов: ' + error });
+        }
+    }),
+    createPlaylist: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log('serrv-11');
+        try {
+            const data = {
+                name: req.body.name,
+                description: req.body.description || null,
+                url: crypto_1.default.randomUUID(),
+                creation_date: new Date(),
+                users: {
+                    connect: { id: req.user.id }
+                },
+                access_statuses: {
+                    connect: { id: req.body.id_access }
+                }
+            };
+            const isNameUnique = yield playlists_service_1.playlistsService.checkPlaylistName(req.body.name, req.user.id);
+            console.log(isNameUnique);
+            if (!isNameUnique) {
+                res.status(206).json({ message: 'Плейлист с таким названием уже есть' });
+                return;
+            }
+            const playlist = yield playlists_service_1.playlistsService.createPlaylist(data);
+            res.status(200).json({ playlist });
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при создании плейлиста: ' + error });
         }
     }),
     getPlaylistByUrl: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -103,6 +136,30 @@ exports.playlistsController = {
         catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка добавления видео в плейлист: ' + error });
+        }
+    }),
+    removeVideoFromPlaylist: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const url = req.params.url;
+            const videoId = req.body.videoId;
+            if (url) {
+                const playlist = yield playlists_service_1.playlistsService.getPlaylistByUrl(url);
+                if (playlist) {
+                    const removedVideo = yield playlists_service_1.playlistsService.removeVideoFromPlaylist(videoId, playlist.id);
+                    console.log(removedVideo);
+                    res.status(200).json({ removedVideo });
+                }
+                else {
+                    res.status(500).json({ message: 'Ошибка при получении плейлиста' });
+                }
+            }
+            else {
+                res.status(500).json({});
+            }
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка удаления видео из плейлиста: ' + error });
         }
     }),
 };

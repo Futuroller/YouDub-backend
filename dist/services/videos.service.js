@@ -64,6 +64,16 @@ exports.videosService = {
                         }
                     })
                 ]);
+                const progressPercentObj = yield prisma.history.findFirst({
+                    where: {
+                        id_user: userId,
+                        id_video: video.id
+                    },
+                    select: {
+                        progress_percent: true,
+                    }
+                });
+                let progressPercent = progressPercentObj && 'progress_percent' in progressPercentObj ? progressPercentObj.progress_percent : 0;
                 const isFollowed = yield channels_service_1.channelsService.isFollowed(video.id_owner, userId);
                 const ownerSubscribersCount = yield prisma.subscriptions.count({
                     where: {
@@ -74,6 +84,7 @@ exports.videosService = {
                     views,
                     likes,
                     dislikes,
+                    progressPercent,
                     isFollowed });
             }
             catch (error) {
@@ -81,11 +92,11 @@ exports.videosService = {
             }
         });
     },
-    getRecommendations(page, limit, categories) {
+    getRecommendations(page, limit, categories, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
             const categoryIds = categories.map(c => c.id);
-            let videos = yield prisma.videos.findMany({
+            const videos = yield prisma.videos.findMany({
                 where: {
                     id_category: {
                         in: categoryIds
@@ -98,6 +109,14 @@ exports.videosService = {
                             avatar_url: true
                         }
                     },
+                    history: {
+                        where: {
+                            id_user: userId
+                        },
+                        select: {
+                            progress_percent: true
+                        }
+                    },
                     _count: {
                         select: {
                             history: true
@@ -108,8 +127,53 @@ exports.videosService = {
                 take: Number(limit),
                 orderBy: { load_date: 'desc' }
             })
-                .then(videos => videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: video.users.username, owner_channel_image: video.users.avatar_url, views: video._count.history }))));
-            const totalCount = yield prisma.videos.count();
+                .then(videos => videos.map(video => {
+                var _a;
+                return (Object.assign(Object.assign({}, video), { owner_username: video.users.username, owner_channel_image: video.users.avatar_url, views: video._count.history, progress_percent: ((_a = video.history[0]) === null || _a === void 0 ? void 0 : _a.progress_percent) || 0 }));
+            }));
+            const totalCount = videos.length;
+            return { videos, totalCount };
+        });
+    },
+    getVideosByQuery(page, limit, searchQuery) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const skip = (page - 1) * limit;
+            const videos = yield prisma.videos.findMany({
+                where: {
+                    OR: [
+                        { name: { contains: searchQuery, mode: 'insensitive' } },
+                        { description: { contains: searchQuery, mode: 'insensitive' } },
+                        { users: { username: { contains: searchQuery, mode: 'insensitive' } } },
+                        { video_tags: { some: { tags: { name: { contains: searchQuery, mode: 'insensitive' } } } } }
+                    ]
+                },
+                include: {
+                    users: {
+                        select: {
+                            username: true,
+                            avatar_url: true
+                        }
+                    },
+                    _count: {
+                        select: {
+                            history: true
+                        }
+                    },
+                    video_tags: {
+                        select: {
+                            tags: {
+                                select: {
+                                    name: true
+                                }
+                            }
+                        }
+                    }
+                },
+                skip: skip,
+                take: Number(limit),
+                orderBy: { load_date: 'desc' }
+            }).then(videos => videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: video.users.username, owner_channel_image: video.users.avatar_url, views: video._count.history }))));
+            const totalCount = videos.length;
             return { videos, totalCount };
         });
     },
@@ -184,7 +248,8 @@ exports.videosService = {
             const skip = (page - 1) * limit;
             const history = yield prisma.history.findMany({
                 where: { id_user: userId },
-                include: {
+                select: {
+                    watched_at: true,
                     videos: {
                         include: {
                             users: {
@@ -205,7 +270,7 @@ exports.videosService = {
                 take: Number(limit),
                 orderBy: { watched_at: 'desc' }
             });
-            const videos = history.map(item => (Object.assign(Object.assign({}, item.videos), { owner_username: item.videos.users.username, owner_avatar: item.videos.users.avatar_url, views: item.videos._count.history })));
+            const videos = history.map(item => (Object.assign(Object.assign({}, item.videos), { owner_username: item.videos.users.username, owner_avatar: item.videos.users.avatar_url, views: item.videos._count.history, watched_at: item.watched_at })));
             const totalCount = yield prisma.history.count({
                 where: {
                     id_user: userId
@@ -244,6 +309,16 @@ exports.videosService = {
                 }
             });
             return { videos, totalCount };
+        });
+    },
+    cleanHistory(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const deletedHistory = yield prisma.history.deleteMany({
+                where: {
+                    id_user: userId
+                }
+            });
+            return deletedHistory;
         });
     },
     deleteHistoryVideo(videoId, userId) {
@@ -315,6 +390,22 @@ exports.videosService = {
                 }
             });
             return reaction;
+        });
+    },
+    updateViewProgress(userId, videoId, progressPercent) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const historyRecord = yield prisma.history.update({
+                where: {
+                    id_user_id_video: {
+                        id_user: userId,
+                        id_video: videoId
+                    }
+                },
+                data: {
+                    progress_percent: progressPercent
+                }
+            });
+            return historyRecord;
         });
     },
 };

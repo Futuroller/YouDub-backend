@@ -32,7 +32,7 @@ exports.categoriesService = {
             return userCategories;
         });
     },
-    getUsersCategories(userId) {
+    getUserCategories(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const categories = yield prisma.favorite_categories.findMany({
                 where: {
@@ -43,6 +43,22 @@ exports.categoriesService = {
                 }
             }).then(categories => categories.map(c => c.categories));
             return categories;
+        });
+    },
+    updateUserCategories(userId, categoriesArray) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userCategories = yield prisma.favorite_categories.deleteMany({
+                where: {
+                    id_user: userId
+                }
+            });
+            const newCategories = yield prisma.favorite_categories.createMany({
+                data: categoriesArray.map(c => ({
+                    id_user: userId,
+                    id_category: c.id
+                }))
+            });
+            return newCategories;
         });
     },
 };

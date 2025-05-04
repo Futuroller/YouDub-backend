@@ -147,6 +147,10 @@ exports.userController = {
                     updatedFields.channel_header_url = files.header[0].filename;
                 }
             }
+            if (updatedFields.categories) {
+                const categories = yield categories_service_1.categoriesService.updateUserCategories(req.user.id, JSON.parse(updatedFields.categories));
+                delete updatedFields.categories;
+            }
             const updatedUser = yield user_service_1.userService.updateUser(userId, updatedFields);
             res.status(200).json(updatedUser);
         }

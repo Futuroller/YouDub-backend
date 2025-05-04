@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { playlistsService } from "../services/playlists.service";
 import { videosService } from "../services/videos.service";
+import crypto from "crypto";
+import { Prisma } from '@prisma/client';
 
 export const playlistsController = {//business
     getAllPlaylists: async (req: Request, res: Response) => {
@@ -15,6 +17,38 @@ export const playlistsController = {//business
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка при получении плейлистов: ' + error });
+        }
+    },
+    createPlaylist: async (req: Request, res: Response) => {
+        console.log('serrv-11')
+        try {
+            const data: Prisma.playlistsCreateInput = {
+                name: req.body.name,
+                description: req.body.description || null,
+                url: crypto.randomUUID(),
+                creation_date: new Date(),
+                users: {
+                    connect: { id: req.user.id }
+                },
+                access_statuses: {
+                    connect: { id: req.body.id_access }
+                }
+            };
+
+            const isNameUnique = await playlistsService.checkPlaylistName(req.body.name, req.user.id);
+            console.log(isNameUnique)
+
+            if (!isNameUnique) {
+                res.status(206).json({ message: 'Плейлист с таким названием уже есть' });
+                return;
+            }
+
+            const playlist = await playlistsService.createPlaylist(data);
+
+            res.status(200).json({ playlist });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при создании плейлиста: ' + error });
         }
     },
     getPlaylistByUrl: async (req: Request, res: Response) => {
@@ -87,6 +121,29 @@ export const playlistsController = {//business
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка добавления видео в плейлист: ' + error });
+        }
+    },
+    removeVideoFromPlaylist: async (req: Request, res: Response) => {
+        try {
+            const url = req.params.url;
+            const videoId = req.body.videoId;
+
+            if (url) {
+                const playlist = await playlistsService.getPlaylistByUrl(url);
+
+                if (playlist) {
+                    const removedVideo = await playlistsService.removeVideoFromPlaylist(videoId, playlist.id)
+                    console.log(removedVideo)
+                    res.status(200).json({ removedVideo });
+                } else {
+                    res.status(500).json({ message: 'Ошибка при получении плейлиста' });
+                }
+            } else {
+                res.status(500).json({});
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка удаления видео из плейлиста: ' + error });
         }
     },
 };

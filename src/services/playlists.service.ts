@@ -1,4 +1,4 @@
-import { PrismaClient, users } from "@prisma/client";
+import { playlists, Prisma, PrismaClient, users } from "@prisma/client";
 import crypto from 'crypto';
 
 const prisma = new PrismaClient();
@@ -44,6 +44,32 @@ export const playlistsService = {
             return likedPlaylist;
         } catch (error) {
             return null;
+        }
+    },
+    async createPlaylist(data: Prisma.playlistsCreateInput) {
+        try {
+            console.log('serrv-')
+            const playlist = await prisma.playlists.create({
+                data: data
+            });
+
+            return { playlist };
+        } catch (error) {
+            throw new Error(`Ошибка при создании базовых плейлистов: ${error}`);
+        }
+    },
+    async checkPlaylistName(name: string, userId: number) {
+        try {
+            const isUnique = await prisma.playlists.findFirst({
+                where: {
+                    id_user: userId,
+                    name
+                }
+            }) ? false : true;//если нашёлся такой плейлист, то название не уникальное
+
+            return isUnique;
+        } catch (error) {
+            throw new Error(`Ошибка при определении уникальности имени: ${error}`);
         }
     },
     async createDefaultPlaylists(userId: number) {

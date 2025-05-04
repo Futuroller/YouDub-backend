@@ -22,4 +22,14 @@ exports.categoriesController = {
             res.status(500).json({ message: 'Ошибка при получении категорий: ' + error });
         }
     }),
+    getUsersCategories: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const categories = yield categories_service_1.categoriesService.getUserCategories(req.user.id);
+            res.status(200).json({ categories });
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении категорий: ' + error });
+        }
+    }),
 };

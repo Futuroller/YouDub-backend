@@ -20,7 +20,7 @@ export const categoriesService = {
 
         return userCategories;
     },
-    async getUsersCategories(userId: number) {
+    async getUserCategories(userId: number) {
         const categories = await prisma.favorite_categories.findMany({
             where: {
                 id_user: userId
@@ -31,5 +31,20 @@ export const categoriesService = {
         }).then(categories => categories.map(c => c.categories))
 
         return categories;
+    },
+    async updateUserCategories(userId: number, categoriesArray: categories[]) {
+        const userCategories = await prisma.favorite_categories.deleteMany({
+            where: {
+                id_user: userId
+            }
+        });
+        const newCategories = await prisma.favorite_categories.createMany({
+            data: categoriesArray.map(c => ({
+                id_user: userId,
+                id_category: c.id
+            }))
+        })
+
+        return newCategories;
     },
 };

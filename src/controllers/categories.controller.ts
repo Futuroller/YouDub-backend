@@ -12,4 +12,13 @@ export const categoriesController = {
             res.status(500).json({ message: 'Ошибка при получении категорий: ' + error });
         }
     },
+    getUsersCategories: async (req: Request, res: Response) => {
+        try {
+            const categories = await categoriesService.getUserCategories(req.user.id);
+            res.status(200).json({ categories });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении категорий: ' + error });
+        }
+    },
 };

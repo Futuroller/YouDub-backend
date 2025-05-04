@@ -141,6 +141,10 @@ export const userController = {//business
                     updatedFields.channel_header_url = files.header[0].filename;
                 }
             }
+            if (updatedFields.categories) {
+                const categories = await categoriesService.updateUserCategories(req.user.id, JSON.parse(updatedFields.categories));
+                delete updatedFields.categories;
+            }
             const updatedUser = await userService.updateUser(userId, updatedFields);
 
             res.status(200).json(updatedUser);
@@ -149,7 +153,6 @@ export const userController = {//business
             res.status(500).json({ message: 'Ошибка обновления пользователя', error });
         }
     },
-
     unsetUserField: async (req: Request, res: Response) => {
         try {
             const userId = req.user.id;

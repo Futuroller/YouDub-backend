@@ -9,7 +9,7 @@ export const commentsController = {//business
             const userId = req.user.id;
 
             if (url) {
-                const video = await videosService.getVideoByUrl(url);
+                const video = await videosService.getVideoByUrl(url, userId);
 
                 if (video) {
                     const comments = await commentsService.getCommentsForVideo(video.id, userId);
@@ -33,7 +33,7 @@ export const commentsController = {//business
             const userId = req.user.id;
 
             if (url) {
-                const video = await videosService.getVideoByUrl(url);
+                const video = await videosService.getVideoByUrl(url, userId);
 
                 if (video) {
                     const comment = await commentsService.addComment(commentText, userId, video.id);

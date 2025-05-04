@@ -13,8 +13,21 @@ export const videosController = {//business
             const { page = 1, limit = 12 } = req.body;
             const userId = req.user.id;
 
-            const categories = await categoriesService.getUsersCategories(userId);
-            const data = await videosService.getRecommendations(Number(page), Number(limit), categories);
+            const categories = await categoriesService.getUserCategories(userId);
+            const data = await videosService.getRecommendations(Number(page), Number(limit), categories, userId);
+
+            res.status(200).json(data);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении видео' + error });
+        }
+    },
+    getSearchVideos: async (req: Request, res: Response) => {
+        try {
+            const { page, limit } = req.body;
+            const searchQuery = req.params.searchQuery;
+
+            const data = await videosService.getVideosByQuery(Number(page), Number(limit), searchQuery);
 
             res.status(200).json(data);
         } catch (error) {
@@ -114,6 +127,15 @@ export const videosController = {//business
             res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
         }
     },
+    cleanHistory: async (req: Request, res: Response) => {
+        try {
+            const data = await videosService.cleanHistory(req.user.id);
+            res.status(200).json({});
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при удалении видео из истории' + error });
+        }
+    },
     deleteHistoryVideo: async (req: Request, res: Response) => {
         try {
             const data = await videosService.deleteHistoryVideo(+req.params.id, req.user.id);
@@ -163,6 +185,22 @@ export const videosController = {//business
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка оценки видео: ' + error });
+        }
+    },
+    updateViewProgress: async (req: Request, res: Response) => {
+        try {
+            const userId = req.user.id;
+            const url = req.params.url;
+            const video = await videosService.getVideoByUrl(url, userId);
+            const { progress_percent } = req.body;
+
+            if (!video || !video.id) return;
+            const data = await videosService.updateViewProgress(userId, video.id, progress_percent);
+
+            res.status(200).json(data);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления прогресса просмотра: ' + error });
         }
     },
     getSubVideos: async (req: Request, res: Response) => {

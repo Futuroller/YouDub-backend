@@ -21,8 +21,20 @@ exports.videosController = {
         try {
             const { page = 1, limit = 12 } = req.body;
             const userId = req.user.id;
-            const categories = yield categories_service_1.categoriesService.getUsersCategories(userId);
-            const data = yield videos_service_1.videosService.getRecommendations(Number(page), Number(limit), categories);
+            const categories = yield categories_service_1.categoriesService.getUserCategories(userId);
+            const data = yield videos_service_1.videosService.getRecommendations(Number(page), Number(limit), categories, userId);
+            res.status(200).json(data);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при получении видео' + error });
+        }
+    }),
+    getSearchVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const { page, limit } = req.body;
+            const searchQuery = req.params.searchQuery;
+            const data = yield videos_service_1.videosService.getVideosByQuery(Number(page), Number(limit), searchQuery);
             res.status(200).json(data);
         }
         catch (error) {
@@ -120,6 +132,16 @@ exports.videosController = {
             res.status(500).json({ message: 'Ошибка при получении истории просмотра' + error });
         }
     }),
+    cleanHistory: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const data = yield videos_service_1.videosService.cleanHistory(req.user.id);
+            res.status(200).json({});
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при удалении видео из истории' + error });
+        }
+    }),
     deleteHistoryVideo: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const data = yield videos_service_1.videosService.deleteHistoryVideo(+req.params.id, req.user.id);
@@ -176,6 +198,22 @@ exports.videosController = {
         catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка оценки видео: ' + error });
+        }
+    }),
+    updateViewProgress: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const userId = req.user.id;
+            const url = req.params.url;
+            const video = yield videos_service_1.videosService.getVideoByUrl(url, userId);
+            const { progress_percent } = req.body;
+            if (!video || !video.id)
+                return;
+            const data = yield videos_service_1.videosService.updateViewProgress(userId, video.id, progress_percent);
+            res.status(200).json(data);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления прогресса просмотра: ' + error });
         }
     }),
     getSubVideos: (req, res) => __awaiter(void 0, void 0, void 0, function* () {

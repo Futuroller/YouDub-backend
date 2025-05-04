@@ -122,6 +122,7 @@ model video_tags {
   @@unique([id_video, id_tag], name: "id_video_id_tag", map: "id_video_id_tag")
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model videos {
   id              Int               @id(map: "videos_pk") @default(autoincrement())
   name            String            @db.VarChar(150)

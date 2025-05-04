@@ -18,7 +18,7 @@ exports.commentsController = {
             const url = req.params.url;
             const userId = req.user.id;
             if (url) {
-                const video = yield videos_service_1.videosService.getVideoByUrl(url);
+                const video = yield videos_service_1.videosService.getVideoByUrl(url, userId);
                 if (video) {
                     const comments = yield comments_service_1.commentsService.getCommentsForVideo(video.id, userId);
                     res.status(200).json({ comments });
@@ -42,7 +42,7 @@ exports.commentsController = {
             const commentText = req.body.comment;
             const userId = req.user.id;
             if (url) {
-                const video = yield videos_service_1.videosService.getVideoByUrl(url);
+                const video = yield videos_service_1.videosService.getVideoByUrl(url, userId);
                 if (video) {
                     const comment = yield comments_service_1.commentsService.addComment(commentText, userId, video.id);
                     res.status(200).json({ comment });

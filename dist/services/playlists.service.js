@@ -60,6 +60,36 @@ exports.playlistsService = {
             }
         });
     },
+    createPlaylist(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                console.log('serrv-');
+                const playlist = yield prisma.playlists.create({
+                    data: data
+                });
+                return { playlist };
+            }
+            catch (error) {
+                throw new Error(`Ошибка при создании базовых плейлистов: ${error}`);
+            }
+        });
+    },
+    checkPlaylistName(name, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const isUnique = (yield prisma.playlists.findFirst({
+                    where: {
+                        id_user: userId,
+                        name
+                    }
+                })) ? false : true; //если нашёлся такой плейлист, то название не уникальное
+                return isUnique;
+            }
+            catch (error) {
+                throw new Error(`Ошибка при определении уникальности имени: ${error}`);
+            }
+        });
+    },
     createDefaultPlaylists(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
