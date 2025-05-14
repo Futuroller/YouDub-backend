@@ -16,7 +16,8 @@ export const playlistsService = {
             .then(playlists => playlists.map(playlist => ({
                 ...playlist,
                 access_status: playlist.access_statuses.name,
-                videosCount: playlist.playlist_videos.length
+                videosCount: playlist.playlist_videos.length,
+                isDefault: playlist.name === 'Смотреть позже' || playlist.name === 'Понравившиеся' ? true : false
             })));
 
         return playlists;
@@ -27,7 +28,10 @@ export const playlistsService = {
                 where: { url: url },
             });
 
-            return playlist;
+            return {
+                ...playlist,
+                isDefault: playlist.name === 'Смотреть позже' || playlist.name === 'Понравившиеся' ? true : false
+            };
         } catch (error) {
             return null;
         }
@@ -48,14 +52,40 @@ export const playlistsService = {
     },
     async createPlaylist(data: Prisma.playlistsCreateInput) {
         try {
-            console.log('serrv-')
             const playlist = await prisma.playlists.create({
                 data: data
             });
 
             return { playlist };
         } catch (error) {
-            throw new Error(`Ошибка при создании базовых плейлистов: ${error}`);
+            throw new Error(`Ошибка при создании плейлиста: ${error}`);
+        }
+    },
+    async updatePlaylist(playlistId: number, playlistData: any) {
+        try {
+            const playlist = await prisma.playlists.update({
+                where: {
+                    id: playlistId
+                },
+                data: playlistData
+            });
+
+            return { playlist };
+        } catch (error) {
+            throw new Error(`Ошибка при изменении плейлиста: ${error}`);
+        }
+    },
+    async deletePlaylist(playlistId: number) {
+        try {
+            const playlist = await prisma.playlists.delete({
+                where: {
+                    id: playlistId
+                },
+            });
+
+            return { playlist };
+        } catch (error) {
+            throw new Error(`Ошибка при удалении плейлиста: ${error}`);
         }
     },
     async checkPlaylistName(name: string, userId: number) {

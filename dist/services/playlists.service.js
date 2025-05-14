@@ -27,7 +27,7 @@ exports.playlistsService = {
                 },
                 orderBy: { name: 'desc' }
             })
-                .then(playlists => playlists.map(playlist => (Object.assign(Object.assign({}, playlist), { access_status: playlist.access_statuses.name, videosCount: playlist.playlist_videos.length }))));
+                .then(playlists => playlists.map(playlist => (Object.assign(Object.assign({}, playlist), { access_status: playlist.access_statuses.name, videosCount: playlist.playlist_videos.length, isDefault: playlist.name === 'Смотреть позже' || playlist.name === 'Понравившиеся' ? true : false }))));
             return playlists;
         });
     },
@@ -37,7 +37,7 @@ exports.playlistsService = {
                 let playlist = yield prisma.playlists.findFirstOrThrow({
                     where: { url: url },
                 });
-                return playlist;
+                return Object.assign(Object.assign({}, playlist), { isDefault: playlist.name === 'Смотреть позже' || playlist.name === 'Понравившиеся' ? true : false });
             }
             catch (error) {
                 return null;
@@ -63,14 +63,44 @@ exports.playlistsService = {
     createPlaylist(data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                console.log('serrv-');
                 const playlist = yield prisma.playlists.create({
                     data: data
                 });
                 return { playlist };
             }
             catch (error) {
-                throw new Error(`Ошибка при создании базовых плейлистов: ${error}`);
+                throw new Error(`Ошибка при создании плейлиста: ${error}`);
+            }
+        });
+    },
+    updatePlaylist(playlistId, playlistData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const playlist = yield prisma.playlists.update({
+                    where: {
+                        id: playlistId
+                    },
+                    data: playlistData
+                });
+                return { playlist };
+            }
+            catch (error) {
+                throw new Error(`Ошибка при изменении плейлиста: ${error}`);
+            }
+        });
+    },
+    deletePlaylist(playlistId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const playlist = yield prisma.playlists.delete({
+                    where: {
+                        id: playlistId
+                    },
+                });
+                return { playlist };
+            }
+            catch (error) {
+                throw new Error(`Ошибка при удалении плейлиста: ${error}`);
             }
         });
     },

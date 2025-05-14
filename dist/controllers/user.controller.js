@@ -50,6 +50,11 @@ exports.userController = {
         catch (error) {
             console.log(error);
         }
+        const isEmailUnique = !(yield user_service_1.userService.findUser('email', body.email));
+        if (!isEmailUnique) {
+            res.status(409).json({ message: 'Пользователь с таким email уже зарегистрирован' });
+            return;
+        }
         const activationLink = crypto_1.default.randomUUID();
         const userData = {
             username: body.username,
@@ -94,7 +99,7 @@ exports.userController = {
                 return;
             }
             const token = yield jwt_service_1.jwtService.createJwt(user);
-            const { password_hash, is_banned, activation_link } = user, publicUserData = __rest(user, ["password_hash", "is_banned", "activation_link"]); //исключаем данные, которые не стоит передавать на сервер
+            const { password_hash, activation_link } = user, publicUserData = __rest(user, ["password_hash", "activation_link"]); //исключаем данные, которые не стоит передавать на сервер
             res.status(200).json({
                 message: "Успешный вход",
                 token,
@@ -175,6 +180,51 @@ exports.userController = {
             }
             const user = yield user_service_1.userService.updateUser(userId, unsetedFields);
             res.status(200).json(user);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления пользователя', error });
+        }
+    }),
+    banUser: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const userId = req.user.id;
+            const tagname = req.params.tagname;
+            const banReason = req.body.banReason;
+            const user = yield user_service_1.userService.findUser('id', userId);
+            if (user && user.id_role !== 2) {
+                res.status(403).json({ message: 'Недостаточно прав' });
+                return;
+            }
+            const selectedUser = yield user_service_1.userService.findUser('tagname', tagname);
+            if (!selectedUser) {
+                res.status(400).json({ message: 'Пользователь не найден' });
+                return;
+            }
+            const bannedUser = yield user_service_1.userService.updateUser(selectedUser.id, { is_banned: true, ban_reason: banReason });
+            res.status(200).json(bannedUser);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления пользователя', error });
+        }
+    }),
+    unbanUser: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const userId = req.user.id;
+            const tagname = req.params.tagname;
+            const user = yield user_service_1.userService.findUser('id', userId);
+            if (user && user.id_role !== 2) {
+                res.status(403).json({ message: 'Недостаточно прав' });
+                return;
+            }
+            const selectedUser = yield user_service_1.userService.findUser('tagname', tagname);
+            if (!selectedUser) {
+                res.status(400).json({ message: 'Пользователь не найден' });
+                return;
+            }
+            const unbannedUser = yield user_service_1.userService.updateUser(selectedUser.id, { is_banned: false, ban_reason: null });
+            res.status(200).json(unbannedUser);
         }
         catch (error) {
             console.log(error);

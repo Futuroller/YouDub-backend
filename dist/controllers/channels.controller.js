@@ -42,7 +42,7 @@ exports.channelsController = {
                 res.status(500).json({ message: 'Канал не найден' });
                 return;
             }
-            const { activation_link, is_banned, ban_reason, id, id_role, is__activated, password_hash } = preChannel, publicChannelData = __rest(preChannel, ["activation_link", "is_banned", "ban_reason", "id", "id_role", "is__activated", "password_hash"]); //исключаем данные, которые не стоит передавать на сервер
+            const { activation_link, id, id_role, is__activated, password_hash } = preChannel, publicChannelData = __rest(preChannel, ["activation_link", "id", "id_role", "is__activated", "password_hash"]); //исключаем данные, которые не стоит передавать на сервер
             const isFollowed = yield channels_service_1.channelsService.isFollowed(preChannel.id, req.user.id);
             const channel = Object.assign(Object.assign({}, publicChannelData), { isFollowed });
             res.status(200).json({ channel });

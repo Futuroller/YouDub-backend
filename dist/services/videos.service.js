@@ -30,6 +30,43 @@ exports.videosService = {
             }
         });
     },
+    updateVideo(videoId, videoData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const video = yield prisma.videos.update({
+                    where: {
+                        id: videoId
+                    },
+                    data: videoData
+                });
+                return video;
+            }
+            catch (error) {
+                console.log(error);
+            }
+            finally {
+                yield prisma.$disconnect();
+            }
+        });
+    },
+    deleteVideo(videoId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const video = yield prisma.videos.delete({
+                    where: {
+                        id: videoId
+                    },
+                });
+                return video;
+            }
+            catch (error) {
+                console.log(error);
+            }
+            finally {
+                yield prisma.$disconnect();
+            }
+        });
+    },
     getVideoByUrl(url, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -100,7 +137,8 @@ exports.videosService = {
                 where: {
                     id_category: {
                         in: categoryIds
-                    }
+                    },
+                    id_access: 1
                 },
                 include: {
                     users: {
@@ -218,24 +256,20 @@ exports.videosService = {
                                         history: true
                                     }
                                 },
-                            },
-                        },
-                        playlists: {
-                            include: {
                                 users: {
                                     select: {
                                         username: true,
                                         avatar_url: true
                                     }
                                 }
-                            }
+                            },
                         },
                     },
                     skip: skip,
                     take: Number(limit),
                     orderBy: { date_added: 'desc' }
                 });
-                const videos = playlistVideos.map(video => (Object.assign(Object.assign({}, video.videos), { owner_username: video.playlists.users.username, owner_channel_image: video.playlists.users.avatar_url, views: video.videos._count.history })));
+                const videos = playlistVideos.map(video => (Object.assign(Object.assign({}, video.videos), { owner_username: video.videos.users.username, owner_channel_image: video.videos.users.avatar_url, views: video.videos._count.history })));
                 return videos;
             }
             catch (error) {
@@ -247,7 +281,10 @@ exports.videosService = {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
             const history = yield prisma.history.findMany({
-                where: { id_user: userId },
+                where: {
+                    id_user: userId,
+                    isHidden: false,
+                },
                 select: {
                     watched_at: true,
                     videos: {
@@ -313,9 +350,12 @@ exports.videosService = {
     },
     cleanHistory(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const deletedHistory = yield prisma.history.deleteMany({
+            const deletedHistory = yield prisma.history.updateMany({
                 where: {
                     id_user: userId
+                },
+                data: {
+                    isHidden: true,
                 }
             });
             return deletedHistory;
@@ -329,10 +369,13 @@ exports.videosService = {
                     id_user: userId
                 }
             });
-            const deleteVideo = yield prisma.history.delete({
+            const deleteVideo = yield prisma.history.update({
                 where: {
                     id: currentVideo.id
                 },
+                data: {
+                    isHidden: true,
+                }
             });
             return deleteVideo;
         });
@@ -348,12 +391,14 @@ exports.videosService = {
                 },
                 update: {
                     watched_at: new Date(),
+                    isHidden: false,
                 },
                 create: {
                     id_user: userId,
                     id_video: videoId,
                     progress_percent: 0,
                     watched_at: new Date(),
+                    isHidden: false,
                 }
             });
             return historyRecord;

@@ -18,7 +18,9 @@ mainRoute.post('/videos/channel/:tagname', authMiddleware, videosController.getV
 mainRoute.post('/videos/channels', authMiddleware, videosController.getSubVideos);
 mainRoute.post('/videos/upload', authMiddleware, upload, videosController.uploadVideo);
 mainRoute.get('/videos/:url', authMiddleware, videosController.getVideoByUrl);
+mainRoute.delete('/videos/:url', authMiddleware, videosController.deleteVideo);
 mainRoute.post('/videos/search/:searchQuery', authMiddleware, videosController.getSearchVideos);
+mainRoute.patch('/videos/edit/:url', authMiddleware, upload, videosController.editVideo);
 mainRoute.patch('/videos/reaction/:url', authMiddleware, videosController.setReactionToVideo);
 mainRoute.get('/comments/:url', authMiddleware, commentsController.getCommentsByVideoUrl);
 mainRoute.post('/comments/:url', authMiddleware, commentsController.addComment);
@@ -33,6 +35,8 @@ mainRoute.get('/playlists', authMiddleware, playlistsController.getAllPlaylists)
 mainRoute.post('/playlists/:url', authMiddleware, playlistsController.getPlaylistByUrl);
 mainRoute.post('/playlist', authMiddleware, playlistsController.createPlaylist);
 mainRoute.get('/playlist/:url', authMiddleware, playlistsController.getPlaylistDataByUrl);
+mainRoute.delete('/playlist/:url', authMiddleware, playlistsController.removePlaylist);
+mainRoute.patch('/playlist/edit/:url', authMiddleware, playlistsController.editPlaylist);
 mainRoute.patch('/playlists/video/:url', authMiddleware, playlistsController.addVideoToPlaylist);
 mainRoute.delete('/playlists/video/:url', authMiddleware, playlistsController.removeVideoFromPlaylist);
 mainRoute.get('/channels', authMiddleware, channelsController.getChannels);
@@ -41,5 +45,7 @@ mainRoute.post('/channels/subscription/:tagname', authMiddleware, channelsContro
 mainRoute.delete('/channels/subscription/:tagname', authMiddleware, channelsController.unsubscribe);
 mainRoute.patch('/user/configure', authMiddleware, upload, userController.updateUser);
 mainRoute.delete('/user/configure', authMiddleware, userController.unsetUserField);
+mainRoute.patch('/user/ban/:tagname', authMiddleware, userController.banUser);
+mainRoute.patch('/user/unban/:tagname', authMiddleware, userController.unbanUser);
 mainRoute.get('/categories', categoriesController.getAllCategories);
 mainRoute.get('/user/categories', authMiddleware, categoriesController.getUsersCategories);

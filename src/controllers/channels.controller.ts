@@ -22,7 +22,7 @@ export const channelsController = {//business
                 res.status(500).json({ message: 'Канал не найден' });
                 return;
             }
-            const { activation_link, is_banned, ban_reason, id, id_role, is__activated, password_hash, ...publicChannelData } = preChannel;//исключаем данные, которые не стоит передавать на сервер
+            const { activation_link, id, id_role, is__activated, password_hash, ...publicChannelData } = preChannel;//исключаем данные, которые не стоит передавать на сервер
             const isFollowed = await channelsService.isFollowed(preChannel.id, req.user.id)
             const channel = {
                 ...publicChannelData,

@@ -14,6 +14,7 @@ export const userController = {//business
         const body = req.body;
         const hashedPassword = await bcrypt.hash(body.password, 5);
         let tagname;
+
         try {
             do {
                 tagname = generateUniqueName(body.username);
@@ -24,6 +25,13 @@ export const userController = {//business
             } while (true);
         } catch (error) {
             console.log(error);
+        }
+
+        const isEmailUnique = !await userService.findUser('email', body.email);
+
+        if (!isEmailUnique) {
+            res.status(409).json({ message: 'Пользователь с таким email уже зарегистрирован' });
+            return;
         }
 
         const activationLink = crypto.randomUUID();
@@ -55,7 +63,6 @@ export const userController = {//business
             res.status(500).json({ message: 'Ошибка регистрации пользователя', error });
         }
     },
-
     authUser: async (req: Request, res: Response) => {
         const body = req.body;
         const userData = {
@@ -79,7 +86,7 @@ export const userController = {//business
 
             const token = await jwtService.createJwt(user);
 
-            const { password_hash, is_banned, activation_link, ...publicUserData } = user;//исключаем данные, которые не стоит передавать на сервер
+            const { password_hash, activation_link, ...publicUserData } = user;//исключаем данные, которые не стоит передавать на сервер
 
             res.status(200).json({
                 message: "Успешный вход",
@@ -90,7 +97,6 @@ export const userController = {//business
             res.status(500).json({ message: 'Ошибка авторизации: ', error });
         }
     },
-
     activateUser: async (req: Request, res: Response) => {
         const activationLink = req.params.token;
 
@@ -116,7 +122,6 @@ export const userController = {//business
             res.status(500).json({ message: 'Ошибка активации аккаунта', error });
         }
     },
-
     updateUser: async (req: Request, res: Response) => {
         try {
             const userId = req.user.id;
@@ -173,6 +178,53 @@ export const userController = {//business
             const user = await userService.updateUser(userId, unsetedFields);
 
             res.status(200).json(user);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления пользователя', error });
+        }
+    },
+    banUser: async (req: Request, res: Response) => {
+        try {
+            const userId = req.user.id;
+            const tagname = req.params.tagname;
+            const banReason = req.body.banReason;
+            const user = await userService.findUser('id', userId);
+            if (user && user.id_role !== 2) {
+                res.status(403).json({ message: 'Недостаточно прав' })
+                return;
+            }
+
+            const selectedUser = await userService.findUser('tagname', tagname);
+            if (!selectedUser) {
+                res.status(400).json({ message: 'Пользователь не найден' })
+                return;
+            }
+            const bannedUser = await userService.updateUser(selectedUser.id, { is_banned: true, ban_reason: banReason });
+
+            res.status(200).json(bannedUser);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка обновления пользователя', error });
+        }
+    },
+    unbanUser: async (req: Request, res: Response) => {
+        try {
+            const userId = req.user.id;
+            const tagname = req.params.tagname;
+            const user = await userService.findUser('id', userId);
+            if (user && user.id_role !== 2) {
+                res.status(403).json({ message: 'Недостаточно прав' })
+                return;
+            }
+
+            const selectedUser = await userService.findUser('tagname', tagname);
+            if (!selectedUser) {
+                res.status(400).json({ message: 'Пользователь не найден' })
+                return;
+            }
+            const unbannedUser = await userService.updateUser(selectedUser.id, { is_banned: false, ban_reason: null });
+
+            res.status(200).json(unbannedUser);
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка обновления пользователя', error });

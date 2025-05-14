@@ -6,6 +6,7 @@ import { playlistsService } from "../services/playlists.service";
 import { reactionService } from "../services/reactions.service";
 import { userService } from "../services/user.service";
 import { categoriesService } from "../services/categories.service";
+import { deleteFile } from "../utils/deleteFile";
 
 export const videosController = {//business
     getRecommendations: async (req: Request, res: Response) => {
@@ -98,6 +99,78 @@ export const videosController = {//business
             res.status(500).json({ message: 'Ошибка при загрузке видео' + error });
         }
     },
+    editVideo: async (req: Request, res: Response) => {
+        try {
+            const videoUrl = req.params.url;
+            const video = await videosService.getVideoByUrl(videoUrl, req.user.id);
+
+            if (!video) {
+                res.status(404).json({ message: 'Видео не найдено' });
+                return;
+            }
+
+            if (video.id_owner !== req.user.id) {
+                res.status(403).json({ message: 'Нет доступа к редактированию этого видео' });
+                return;
+            }
+
+            const updateData: any = {};
+
+            if (req.body.name !== undefined) updateData.name = req.body.name;
+            if (req.body.description !== undefined) updateData.description = req.body.description;
+            if (req.body.id_access !== undefined) updateData.id_access = +req.body.id_access;
+            if (req.body.id_category !== undefined) updateData.id_category = +req.body.id_category;
+
+            if (req.files) {
+                const files = req.files as { [fildname: string]: Express.Multer.File[] };
+
+                if (files.preview?.[0]) {
+                    updateData.preview_url = files.preview[0].filename;
+                }
+
+                if (video.preview_url && updateData.preview_url) {
+                    deleteFile(`previews/${video.preview_url}`);
+                }
+            }
+
+            if (Object.keys(updateData).length === 0) {
+                res.status(400).json({ message: 'Нет изменений для обновления' });
+                return;
+            }
+
+            const updatedVideo = await videosService.updateVideo(video.id, updateData);
+
+            res.status(200).json(updatedVideo);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при изменении видео' + error });
+        }
+    },
+    deleteVideo: async (req: Request, res: Response) => {
+        try {
+            const videoUrl = req.params.url;
+            const video = await videosService.getVideoByUrl(videoUrl, req.user.id);
+
+            if (!video) {
+                res.status(404).json({ message: 'Видео не найдено' });
+                return;
+            }
+
+            const user = await userService.findUser('id', req.user.id);
+
+            if (!user || (user.id !== video.id_owner && user.id_role !== 2)) {
+                res.status(403).json({ message: 'Недостаточно прав' });
+                return;
+            }
+
+            const deletedVideo = await videosService.deleteVideo(video.id);
+
+            res.status(200).json(deletedVideo);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при изменении видео' + error });
+        }
+    },
     getVideosFromChannel: async (req: Request, res: Response) => {
         try {
             const { page = 1, limit = 10 } = req.body;
@@ -133,7 +206,7 @@ export const videosController = {//business
             res.status(200).json({});
         } catch (error) {
             console.log(error);
-            res.status(500).json({ message: 'Ошибка при удалении видео из истории' + error });
+            res.status(500).json({ message: 'Ошибка удаления истории просмотра' + error });
         }
     },
     deleteHistoryVideo: async (req: Request, res: Response) => {

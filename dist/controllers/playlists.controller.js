@@ -33,7 +33,6 @@ exports.playlistsController = {
         }
     }),
     createPlaylist: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        console.log('serrv-11');
         try {
             const data = {
                 name: req.body.name,
@@ -48,7 +47,6 @@ exports.playlistsController = {
                 }
             };
             const isNameUnique = yield playlists_service_1.playlistsService.checkPlaylistName(req.body.name, req.user.id);
-            console.log(isNameUnique);
             if (!isNameUnique) {
                 res.status(206).json({ message: 'Плейлист с таким названием уже есть' });
                 return;
@@ -59,6 +57,58 @@ exports.playlistsController = {
         catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка при создании плейлиста: ' + error });
+        }
+    }),
+    editPlaylist: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const data = req.body;
+            const url = req.params.url;
+            if (data.name) {
+                const isNameUnique = yield playlists_service_1.playlistsService.checkPlaylistName(data.name, req.user.id);
+                if (!isNameUnique) {
+                    res.status(206).json({ message: 'Плейлист с таким названием уже есть' });
+                    return;
+                }
+            }
+            const playlist = yield playlists_service_1.playlistsService.getPlaylistByUrl(url);
+            if (!playlist) {
+                res.status(404).json({ message: 'Плейлист не найден' });
+                return;
+            }
+            if (playlist.id_user !== req.user.id) {
+                res.status(403).json({ message: 'Нет доступа к редактированию этого плейлиста' });
+                return;
+            }
+            const updatedPlaylist = yield playlists_service_1.playlistsService.updatePlaylist(playlist.id, data);
+            res.status(200).json({ updatedPlaylist });
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при редактировании плейлиста: ' + error });
+        }
+    }),
+    removePlaylist: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const url = req.params.url;
+            const playlist = yield playlists_service_1.playlistsService.getPlaylistByUrl(url);
+            if (!playlist) {
+                res.status(404).json({ message: 'Плейлист не найден' });
+                return;
+            }
+            if (playlist.name === 'Смотреть позже' || playlist.name === 'Понравившиеся') {
+                res.status(403).json({ message: 'Нельзя удалять стандартные плейлисты' });
+                return;
+            }
+            if (playlist.id_user !== req.user.id && req.user.id_role !== 2) {
+                res.status(403).json({ message: 'Нет доступа к удалению этого плейлиста' });
+                return;
+            }
+            const removedPlaylist = yield playlists_service_1.playlistsService.deletePlaylist(playlist.id);
+            res.status(200).json({ removedPlaylist });
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при редактировании плейлиста: ' + error });
         }
     }),
     getPlaylistByUrl: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -146,7 +196,6 @@ exports.playlistsController = {
                 const playlist = yield playlists_service_1.playlistsService.getPlaylistByUrl(url);
                 if (playlist) {
                     const removedVideo = yield playlists_service_1.playlistsService.removeVideoFromPlaylist(videoId, playlist.id);
-                    console.log(removedVideo);
                     res.status(200).json({ removedVideo });
                 }
                 else {

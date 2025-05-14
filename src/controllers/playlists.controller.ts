@@ -20,7 +20,6 @@ export const playlistsController = {//business
         }
     },
     createPlaylist: async (req: Request, res: Response) => {
-        console.log('serrv-11')
         try {
             const data: Prisma.playlistsCreateInput = {
                 name: req.body.name,
@@ -36,7 +35,6 @@ export const playlistsController = {//business
             };
 
             const isNameUnique = await playlistsService.checkPlaylistName(req.body.name, req.user.id);
-            console.log(isNameUnique)
 
             if (!isNameUnique) {
                 res.status(206).json({ message: 'Плейлист с таким названием уже есть' });
@@ -49,6 +47,65 @@ export const playlistsController = {//business
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: 'Ошибка при создании плейлиста: ' + error });
+        }
+    },
+    editPlaylist: async (req: Request, res: Response) => {
+        try {
+            const data = req.body;
+            const url = req.params.url;
+            if (data.name) {
+                const isNameUnique = await playlistsService.checkPlaylistName(data.name, req.user.id);
+                if (!isNameUnique) {
+                    res.status(206).json({ message: 'Плейлист с таким названием уже есть' });
+                    return;
+                }
+            }
+
+            const playlist = await playlistsService.getPlaylistByUrl(url);
+            if (!playlist) {
+                res.status(404).json({ message: 'Плейлист не найден' });
+                return;
+            }
+
+            if (playlist.id_user !== req.user.id) {
+                res.status(403).json({ message: 'Нет доступа к редактированию этого плейлиста' });
+                return;
+            }
+
+            const updatedPlaylist = await playlistsService.updatePlaylist(playlist.id, data);
+
+            res.status(200).json({ updatedPlaylist });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при редактировании плейлиста: ' + error });
+        }
+    },
+    removePlaylist: async (req: Request, res: Response) => {
+        try {
+            const url = req.params.url;
+
+            const playlist = await playlistsService.getPlaylistByUrl(url);
+            if (!playlist) {
+                res.status(404).json({ message: 'Плейлист не найден' });
+                return;
+            }
+
+            if (playlist.name === 'Смотреть позже' || playlist.name === 'Понравившиеся') {
+                res.status(403).json({ message: 'Нельзя удалять стандартные плейлисты' });
+                return;
+            }
+
+            if (playlist.id_user !== req.user.id && req.user.id_role !== 2) {
+                res.status(403).json({ message: 'Нет доступа к удалению этого плейлиста' });
+                return;
+            }
+
+            const removedPlaylist = await playlistsService.deletePlaylist(playlist.id);
+
+            res.status(200).json({ removedPlaylist });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Ошибка при редактировании плейлиста: ' + error });
         }
     },
     getPlaylistByUrl: async (req: Request, res: Response) => {
@@ -133,7 +190,6 @@ export const playlistsController = {//business
 
                 if (playlist) {
                     const removedVideo = await playlistsService.removeVideoFromPlaylist(videoId, playlist.id)
-                    console.log(removedVideo)
                     res.status(200).json({ removedVideo });
                 } else {
                     res.status(500).json({ message: 'Ошибка при получении плейлиста' });

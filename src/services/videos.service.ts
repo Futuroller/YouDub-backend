@@ -18,6 +18,37 @@ export const videosService = {
             await prisma.$disconnect();
         }
     },
+    async updateVideo(videoId: number, videoData: any) {
+        try {
+            const video = await prisma.videos.update({
+                where: {
+                    id: videoId
+                },
+                data: videoData
+            });
+
+            return video;
+        } catch (error) {
+            console.log(error);
+        } finally {
+            await prisma.$disconnect();
+        }
+    },
+    async deleteVideo(videoId: number) {
+        try {
+            const video = await prisma.videos.delete({
+                where: {
+                    id: videoId
+                },
+            });
+
+            return video;
+        } catch (error) {
+            console.log(error);
+        } finally {
+            await prisma.$disconnect();
+        }
+    },
     async getVideoByUrl(url: string, userId: number) {
         try {
             let video = await prisma.videos.findFirstOrThrow({
@@ -95,7 +126,8 @@ export const videosService = {
             where: {
                 id_category: {
                     in: categoryIds
-                }
+                },
+                id_access: 1
             },
             include: {
                 users: {
@@ -228,17 +260,13 @@ export const videosService = {
                                     history: true
                                 }
                             },
-                        },
-                    },
-                    playlists: {
-                        include: {
                             users: {
                                 select: {
                                     username: true,
                                     avatar_url: true
                                 }
                             }
-                        }
+                        },
                     },
                 },
                 skip: skip,
@@ -247,8 +275,8 @@ export const videosService = {
             });
             const videos = playlistVideos.map(video => ({
                 ...video.videos,
-                owner_username: video.playlists.users.username,
-                owner_channel_image: video.playlists.users.avatar_url,
+                owner_username: video.videos.users.username,
+                owner_channel_image: video.videos.users.avatar_url,
                 views: video.videos._count.history,
             }));
 
@@ -262,7 +290,10 @@ export const videosService = {
         const skip = (page - 1) * limit;
 
         const history = await prisma.history.findMany({
-            where: { id_user: userId },
+            where: {
+                id_user: userId,
+                isHidden: false,
+            },
             select: {
                 watched_at: true,
                 videos: {
@@ -343,9 +374,12 @@ export const videosService = {
         return { videos, totalCount };
     },
     async cleanHistory(userId: number) {
-        const deletedHistory = await prisma.history.deleteMany({
+        const deletedHistory = await prisma.history.updateMany({
             where: {
                 id_user: userId
+            },
+            data: {
+                isHidden: true,
             }
         });
 
@@ -359,10 +393,13 @@ export const videosService = {
             }
         });
 
-        const deleteVideo = await prisma.history.delete({
+        const deleteVideo = await prisma.history.update({
             where: {
                 id: currentVideo.id
             },
+            data: {
+                isHidden: true,
+            }
         });
 
         return deleteVideo;
@@ -377,12 +414,14 @@ export const videosService = {
             },
             update: {
                 watched_at: new Date(),
+                isHidden: false,
             },
             create: {
                 id_user: userId,
                 id_video: videoId,
                 progress_percent: 0,
                 watched_at: new Date(),
+                isHidden: false,
             }
         });
 

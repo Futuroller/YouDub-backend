@@ -22,7 +22,9 @@ exports.mainRoute.post('/videos/channel/:tagname', auth_middleware_1.authMiddlew
 exports.mainRoute.post('/videos/channels', auth_middleware_1.authMiddleware, videos_controller_1.videosController.getSubVideos);
 exports.mainRoute.post('/videos/upload', auth_middleware_1.authMiddleware, uploadFile_1.default, videos_controller_1.videosController.uploadVideo);
 exports.mainRoute.get('/videos/:url', auth_middleware_1.authMiddleware, videos_controller_1.videosController.getVideoByUrl);
+exports.mainRoute.delete('/videos/:url', auth_middleware_1.authMiddleware, videos_controller_1.videosController.deleteVideo);
 exports.mainRoute.post('/videos/search/:searchQuery', auth_middleware_1.authMiddleware, videos_controller_1.videosController.getSearchVideos);
+exports.mainRoute.patch('/videos/edit/:url', auth_middleware_1.authMiddleware, uploadFile_1.default, videos_controller_1.videosController.editVideo);
 exports.mainRoute.patch('/videos/reaction/:url', auth_middleware_1.authMiddleware, videos_controller_1.videosController.setReactionToVideo);
 exports.mainRoute.get('/comments/:url', auth_middleware_1.authMiddleware, comments_controller_1.commentsController.getCommentsByVideoUrl);
 exports.mainRoute.post('/comments/:url', auth_middleware_1.authMiddleware, comments_controller_1.commentsController.addComment);
@@ -37,6 +39,8 @@ exports.mainRoute.get('/playlists', auth_middleware_1.authMiddleware, playlists_
 exports.mainRoute.post('/playlists/:url', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.getPlaylistByUrl);
 exports.mainRoute.post('/playlist', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.createPlaylist);
 exports.mainRoute.get('/playlist/:url', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.getPlaylistDataByUrl);
+exports.mainRoute.delete('/playlist/:url', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.removePlaylist);
+exports.mainRoute.patch('/playlist/edit/:url', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.editPlaylist);
 exports.mainRoute.patch('/playlists/video/:url', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.addVideoToPlaylist);
 exports.mainRoute.delete('/playlists/video/:url', auth_middleware_1.authMiddleware, playlists_controller_1.playlistsController.removeVideoFromPlaylist);
 exports.mainRoute.get('/channels', auth_middleware_1.authMiddleware, channels_controller_1.channelsController.getChannels);
@@ -45,5 +49,7 @@ exports.mainRoute.post('/channels/subscription/:tagname', auth_middleware_1.auth
 exports.mainRoute.delete('/channels/subscription/:tagname', auth_middleware_1.authMiddleware, channels_controller_1.channelsController.unsubscribe);
 exports.mainRoute.patch('/user/configure', auth_middleware_1.authMiddleware, uploadFile_1.default, user_controller_1.userController.updateUser);
 exports.mainRoute.delete('/user/configure', auth_middleware_1.authMiddleware, user_controller_1.userController.unsetUserField);
+exports.mainRoute.patch('/user/ban/:tagname', auth_middleware_1.authMiddleware, user_controller_1.userController.banUser);
+exports.mainRoute.patch('/user/unban/:tagname', auth_middleware_1.authMiddleware, user_controller_1.userController.unbanUser);
 exports.mainRoute.get('/categories', categories_controller_1.categoriesController.getAllCategories);
 exports.mainRoute.get('/user/categories', auth_middleware_1.authMiddleware, categories_controller_1.categoriesController.getUsersCategories);
