@@ -22,7 +22,6 @@ export const sendActivationEmail = async (email: string, activationLink: string)
                    <a href="${url}">${url}</a>`
         });
     } catch (error) {
-
+        console.error("Ошибка при отправке письма: " + error);
     }
-
 };

@@ -324,12 +324,15 @@ exports.videosService = {
                 select: {
                     users_subscriptions_id_channelTousers: {
                         include: {
-                            videos: true,
-                            _count: {
-                                select: {
-                                    history: true
+                            videos: {
+                                include: {
+                                    _count: {
+                                        select: {
+                                            history: true
+                                        }
+                                    }
                                 }
-                            }
+                            },
                         }
                     }
                 },
@@ -338,7 +341,7 @@ exports.videosService = {
             });
             const videos = subVideos.flatMap(item => {
                 const owner = item.users_subscriptions_id_channelTousers;
-                return owner.videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: owner.username, owner_channel_image: owner.avatar_url, views: owner._count.history })));
+                return owner.videos.map(video => (Object.assign(Object.assign({}, video), { owner_username: owner.username, owner_channel_image: owner.avatar_url, views: video._count.history })));
             });
             const totalCount = yield prisma.history.count({
                 where: {

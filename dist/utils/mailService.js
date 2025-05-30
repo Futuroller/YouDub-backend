@@ -35,6 +35,7 @@ const sendActivationEmail = (email, activationLink) => __awaiter(void 0, void 0,
         });
     }
     catch (error) {
+        console.error("Ошибка при отправке письма: " + error);
     }
 });
 exports.sendActivationEmail = sendActivationEmail;

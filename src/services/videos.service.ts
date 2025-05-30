@@ -341,12 +341,15 @@ export const videosService = {
             select: {
                 users_subscriptions_id_channelTousers: { // Достаем пользователей (каналы)
                     include: {
-                        videos: true,
-                        _count: {
-                            select: {
-                                history: true
+                        videos: {
+                            include: {
+                                _count: {
+                                    select: {
+                                        history: true
+                                    }
+                                }
                             }
-                        }
+                        },
                     }
                 }
             },
@@ -361,9 +364,9 @@ export const videosService = {
                 ...video,
                 owner_username: owner.username,
                 owner_channel_image: owner.avatar_url,
-                views: owner._count.history,
+                views: video._count.history,
             }));
-        })
+        });
 
         const totalCount = await prisma.history.count({
             where: {
