@@ -13,8 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendActivationEmail = void 0;
-const nodemailer_1 = __importDefault(require("nodemailer"));
-const config_1 = require("../config");
+const nodemailer_1 = __importDefault(require("nodemailer")); //подключение библиотеки для отправки писем
+const config_1 = require("../config"); //импорт переменной, в которой хранится домен сайта
 const transporter = nodemailer_1.default.createTransport({
     service: 'mail.ru',
     auth: {
@@ -23,7 +23,7 @@ const transporter = nodemailer_1.default.createTransport({
     }
 });
 const sendActivationEmail = (email, activationLink) => __awaiter(void 0, void 0, void 0, function* () {
-    const url = `${config_1.API_URL}/auth/activate/${activationLink}`;
+    const url = `${config_1.API_URL}/auth/activate/${activationLink}`; //Ссылка для письма
     try {
         yield transporter.sendMail({
             from: '"YouDub" <no-reply.youdub@mail.ru>',

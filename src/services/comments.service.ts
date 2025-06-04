@@ -16,6 +16,7 @@ export const commentsService = {
                             id: true,
                             username: true,
                             avatar_url: true,
+                            tagname: true,
                         },
                     },
                     user_comment_reaction: {
